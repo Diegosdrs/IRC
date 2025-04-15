@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:24:38 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/14 14:33:23 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/15 09:58:02 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,5 +43,5 @@ class Server
         std::string _password;
         int _server_fd;
         std::vector<Client> _clients;
-        //std::map<std::string, Channel> _channels;
+        std::list<std::string> _channels;
 };
