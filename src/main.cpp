@@ -6,45 +6,94 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 12:37:46 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/14 13:19:47 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/16 13:46:21 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <string>
 #include <cstdlib>
+#include <vector>
+#include "../include/Client.hpp"
+#include "../include/Channel.hpp"
 
-void    ft_irc(int port, std::string password)
-{
-    
-}
+int main() {
+    // Conteneurs globaux simulant ceux du Server
+    std::vector<Client*> clients;
+    std::vector<Channel*> channels;
 
-int verif_port(int port)
-{
-    port += 0;
-    return (0);
-}
+    // Création de clients
+    Client* alice = new Client(1);
+    Client* bob = new Client(2);
+    Client* charlie = new Client(3);
 
-int main(int ac, char **av)
-{
-    if (ac != 3)
-    {
-        std::cerr << "Error : bad argument" << std::endl;
-        return (1);
-    }
-    int port = atoi(av[1]);
-    if (port < 1024 || verif_port(port) == 1)
-    {
-        std::cerr << "Error : bad port" << std::endl;
-        return (1);
-    }
-    if (av[2] == NULL)
-    {
-        std::cerr << "Error : no password" << std::endl;
-        return (1);
-    }
-    std::string password(av[2]);
-    ft_irc(port, password);
-    return (0);
+    clients.push_back(alice);
+    clients.push_back(bob);
+    clients.push_back(charlie);
+
+    // Set nicknames et usernames (avec vérifications)
+    alice->set_nickname("Alice", clients);
+    alice->set_username("alice42", clients);
+
+    bob->set_nickname("Bob", clients);
+    bob->set_username("bob_dev", clients);
+
+    charlie->set_nickname("Charlie", clients);
+    charlie->set_username("charlie_lol", clients);
+
+    // Test de nickname déjà pris
+    Client* hacker = new Client(4);
+    hacker->set_nickname("Alice", clients); // doit afficher une erreur
+    delete hacker;
+
+    // Création de channels
+    Channel* general = new Channel("general");
+    Channel* random = new Channel("random");
+    Channel* cpp = new Channel("cpp");
+
+    channels.push_back(general);
+    channels.push_back(random);
+    channels.push_back(cpp);
+
+    // Clients rejoignent les channels
+    alice->join_channel("general", channels);  // channel existe déjà
+    alice->join_channel("cpp", channels);
+
+    bob->join_channel("general", channels);
+    bob->join_channel("random", channels);
+
+    charlie->join_channel("random", channels);
+    charlie->join_channel("cpp", channels);
+
+    general->status_channel();
+    random->status_channel();
+    cpp->status_channel();
+
+    // Clients quittent des channels
+    bob->leave_channel("general", channels);
+    charlie->leave_channel("cpp", channels);
+
+    // Test de départ d'un channel non rejoint
+    alice->leave_channel("random", channels);
+
+    general->status_channel();
+    random->status_channel();
+    cpp->status_channel();
+
+    // Test de destruction automatique (déconnexion)
+    std::cout << "\n--- Suppression manuelle de Bob ---" << std::endl;
+    delete bob;
+    random->status_channel();
+
+    std::cout << "\n--- Suppression manuelle des Channels ---" << std::endl;
+    delete general;
+    delete random;
+    delete cpp;
+
+    std::cout << "\n--- Suppression manuelle des autres clients ---" << std::endl;
+    delete alice;
+    delete charlie;
+
+    return 0;
 }
     

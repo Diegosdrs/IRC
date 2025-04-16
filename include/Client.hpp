@@ -6,18 +6,21 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/15 15:46:28 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/16 14:49:28 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#pragma once
 #include <string>
 #include <memory>
 #include <list>
 #include <iostream>
 #include <vector>
 #include <netinet/in.h>
-#include "Server.hpp"
+#include <sys/socket.h>
+//#include "Server.hpp"
 #include "Channel.hpp"
+#include "Client.hpp"
 
 class Channel;
 class Server;
@@ -27,33 +30,31 @@ class Client
     public:
         Client();
         Client(int socket);
-        Client(Client const &other);
-        Client &operator=(Client const &other);
         ~Client();
         
         // Set attributs
-        void set_nickname(std::string nickname, std::vector<Client> clients);
-        void set_username(std::string usrname, std::vector<Client> clients);
+        void set_nickname(std::string nickname, std::vector<Client*> clients);
+        void set_username(std::string usrname, std::vector<Client*> clients);
 
         // Get attributs
         std::string get_nickname();
-        std::string get_username();        
+        std::string get_username();
+        int get_socket();       
 
         // Gestion de la connexion
-        //void connect();
-        //void send_message(const std::string &message);
-        //void receive_message();
+        void send_message(const std::string &message);
+        void receive_message(std::string const &message, std::vector<Client*> clients, std::vector<Channel*>channels);
 
         // Gestion des canaux
-        int join_channel(std::string channel_name, std::vector<Channel>channels);
-        void leave_channel(std::string channel_name, std::vector<Channel>channels);
-        bool is_in_channel(Channel const &chan);
+        int join_channel(std::string channel_name, std::vector<Channel*> &channels);
+        void leave_channel(std::string channel_name, std::vector<Channel*> &channels);
+        bool is_in_channel(std::string channel_name);
+        void leave_channel_from_dest_channel(Channel *channel);
         
     private:
         int _socket;
         std::string _nickname;
         std::string _username;
-        sockaddr_in _address;
         bool _isAuthenticated;
-        std::vector<Channel> _channels; 
+        std::vector<Channel*> _channels; 
 };
