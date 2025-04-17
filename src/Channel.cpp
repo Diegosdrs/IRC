@@ -6,17 +6,20 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/16 13:44:05 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/17 13:48:25 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Channel.hpp"
+#include "../include/Client.hpp"
+#include "../include/Command.hpp"
 
 Channel::Channel(){};
 
-Channel::Channel(std::string name)
+Channel::Channel(std::string name, Client *opera)
 {
     this->_name = name;
+    this->opera = opera;
 }
 
 Channel::~Channel()
@@ -38,6 +41,24 @@ std::string Channel::get_name()
     return (this->_name);
 }
 
+Client *Channel::get_operator()
+{
+    return (this->opera);
+}
+
+Client *Channel::get_client(std::string client_name)
+{
+    std::vector<Client*>::iterator it = this->_clients.begin();
+    while (it != this->_clients.end())
+    {
+        if ((*it)->get_nickname() == client_name || (*it)->get_username() == client_name)
+        {
+            return (*it);
+        }
+        it++;
+    }
+    return NULL;
+}
 
 //----------------------------- METHODES ------------------------------------
 

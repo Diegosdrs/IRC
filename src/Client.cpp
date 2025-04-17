@@ -6,11 +6,13 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/16 14:49:58 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/17 15:01:11 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Client.hpp"
+#include "../include/Command.hpp"
+#include "../include/Channel.hpp"
 
 Client::Client(){};
 
@@ -20,6 +22,8 @@ Client::Client(int socket)
     this->_nickname = "default";
     this->_username = "default";
     this->_isAuthenticated = false;
+    this->_is_operator = false;
+    this->_command = new Command();
     // premiere connexion entre client et serveur a faire dans la classe serveur ou client ?
     //this->connect();
     std::cout << "Client join the connexion !" << std::endl;
@@ -28,6 +32,7 @@ Client::Client(int socket)
 // A voir comment l'appeler dans la fonction generale
 Client::~Client()
 {
+    delete this->_command;
     std::vector<Channel*>::iterator it = this->_channels.begin();
     while (it != this->_channels.end())
     {
@@ -88,6 +93,10 @@ void    Client::set_username(std::string username, std::vector<Client*> clients)
     this->_username = username;
 }
 
+void    Client::set_operator(bool is_operator)
+{
+    this->_is_operator = is_operator;
+}
 
 //----------------------------- FONCTIONS MEMBRES ------------------------------------
 
@@ -118,7 +127,7 @@ int    Client::join_channel(std::string channel_name, std::vector<Channel*> &cha
         it++;
     }
     // si join_channel retourne 1, il faut creer un nouveau channel et le mettre dans le 
-    // containeur et renvoyer a la fonction et c good
+    // containeur et renvoyer a la fonction et set_operator a true
     return 1;
 }
 
@@ -186,7 +195,26 @@ void    Client::send_message(std::string const &message)
         
 }
 
-void    Client::receive_message(std::string const &message, std::vector<Client*> clients, std::vector<Channel*>channels)
+int Client::execute_command(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
+    std::vector<std::string>::iterator it = input.begin();
+    while (it != input.end())
+    {
+        
+        it++;
+    }
     
+    // if (this->_is_operator == true && channel_name == this->)
+    // {
+    //     if (command == "KICK")
+    //     {
+    //         return (this->_command->kick(channel_name, client_to_eject, clients, channels)); 
+    //     } 
+    // }   
+    // else
+    // {
+    //     std::cerr << "You are not the operator" << std::endl;
+    //     return (381);
+    // }
+    // return (1);
 }
