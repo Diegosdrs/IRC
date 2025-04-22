@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/17 15:01:11 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/22 15:30:55 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,17 @@ Client::Client(int socket)
     std::cout << "Client join the connexion !" << std::endl;
 }
 
-// A voir comment l'appeler dans la fonction generale
+
 Client::~Client()
 {
     delete this->_command;
+    std::vector<Channel*>::iterator ite = this->_operator_channels.begin();
+    while (ite != this->_operator_channels.end())
+    {
+        if (*ite)
+            (*ite)->set_operator();
+        ite++;
+    }
     std::vector<Channel*>::iterator it = this->_channels.begin();
     while (it != this->_channels.end())
     {
@@ -41,6 +48,7 @@ Client::~Client()
         it++;
     }
     this->_channels.clear();
+    this->_operator_channels.clear();
 }
 
 
@@ -62,8 +70,24 @@ int Client::get_socket()
     return (this->_socket);
 }
 
+int Client::is_operator(std::string channel_name)
+{
+    std::vector<Channel*>:: iterator it = this->_operator_channels.begin();
+    while(it != this->_operator_channels.end())
+    {
+        if ((*it)->get_name() == channel_name)
+        {
+            if ((*it)->get_operator() == this)
+                return (0);
+            return (1);
+        }
+        it++;
+    }
+    return (1);
+}
 
-void    Client::set_nickname(std::string nickname, std::vector<Client*> clients)
+
+int    Client::set_nickname(std::string nickname, std::vector<Client*> clients, std::vector<Channel*> channels)
 {
     std::vector<Client*>:: iterator it = clients.begin();
     while (it != clients.end())
@@ -71,14 +95,25 @@ void    Client::set_nickname(std::string nickname, std::vector<Client*> clients)
         if ((*it)->get_nickname() == nickname)
         {
             std::cerr << "Error: nickname already in use" << std::endl;
-            return;
+            return (1);
         }
         it++;
     }
+    std::vector<Channel*>::iterator ite = channels.begin();
+    while(ite != channels.end())
+    {
+        if ((*ite)->get_name() == nickname)
+        {
+            std::cerr << "Error: nickname already in use" << std::endl;
+            return (1);
+        }
+        ite++;
+    }
     this->_nickname = nickname;
+    return (0);
 }
 
-void    Client::set_username(std::string username, std::vector<Client*> clients)
+int    Client::set_username(std::string username, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
     std::vector<Client*>:: iterator it = clients.begin();
     while (it != clients.end())
@@ -86,11 +121,22 @@ void    Client::set_username(std::string username, std::vector<Client*> clients)
         if ((*it)->get_username() == username)
         {
             std::cerr << "Error: username already in use" << std::endl;
-            return;
+            return (1);
         }
         it++;
     }
+    std::vector<Channel*>::iterator ite = channels.begin();
+    while(ite != channels.end())
+    {
+        if ((*ite)->get_name() == username)
+        {
+            std::cerr << "Error: username already in use" << std::endl;
+            return (1);
+        }
+        ite++;
+    }
     this->_username = username;
+    return (0);
 }
 
 void    Client::set_operator(bool is_operator)
@@ -102,15 +148,17 @@ void    Client::set_operator(bool is_operator)
 
 
 // Nickname DOIT etre set-up sinon segfault
-int    Client::join_channel(std::string channel_name, std::vector<Channel*> &channels)
+int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*> &channels)
 {
+    std::string channel_name = input[1];
+    channel_name.erase(0, 1);
     std::vector<Channel*>:: iterator my_it = this->_channels.begin();
     while(my_it != this->_channels.end())
     {
         if ((*my_it)->get_name() == channel_name)
         {
-            std::cout << "Client " << this->_nickname << " allready is in " << channel_name << " channel." << std::endl;
-            return 0;
+            std::cout << "Client " << this->_nickname << " already is in " << channel_name << " channel." << std::endl;
+            return (443);
         }
         my_it++;
     }
@@ -119,44 +167,99 @@ int    Client::join_channel(std::string channel_name, std::vector<Channel*> &cha
     {
         if (channel_name == (*it)->get_name())
         {
-            (*it)->add_client(this);
-            this->_channels.push_back(*it);
-            std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
-            return 0;
+            if (input.size() > 2)
+            {
+                if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
+                {
+                    std::cerr << "Error : you haven't been invited" << std::endl;
+                    return (473);
+                }
+                if (input[2] != (*it)->get_pass() && (*it)->get_pass() != "")
+                {
+                    std::cerr << "Error : it is not the right password" << std::endl;
+                    return (475);
+                }
+                if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
+                {
+                    std::cerr << "Channel " << channel_name << " is full" << std::endl;
+                    return (471);
+                }
+                (*it)->add_client(this);
+                this->_channels.push_back(*it);
+                std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
+                return 0;
+            }
+            else
+            {
+                if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
+                {
+                    std::cerr << "Error : you haven't been invited" << std::endl;
+                    return (473);
+                }
+                if ((*it)->get_pass() != "")
+                {
+                    std::cerr << "Error : you need a password" << std::endl;
+                    return (475);
+                }
+                if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
+                {
+                    std::cerr << "Channel " << channel_name << " is full" << std::endl;
+                    return (471);
+                }
+                (*it)->add_client(this);
+                this->_channels.push_back(*it);
+                std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
+                return 0;
+            }
         }
         it++;
     }
-    // si join_channel retourne 1, il faut creer un nouveau channel et le mettre dans le 
-    // containeur et renvoyer a la fonction et set_operator a true
-    return 1;
+    return (11);
 }
 
 void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &channels)
 {
-    std::vector<Channel*>:: iterator my_it = this->_channels.begin();
     std::vector<Channel*>:: iterator it = channels.begin();
-    while(my_it != this->_channels.end())
+    while(it != channels.end())
     {
-        if ((*my_it)->get_name() == channel_name)
+        if ((*it)->get_name() == channel_name)
         {
-            while(it != channels.end())
-            {
-                if ((*it)->get_name() == channel_name)
-                {
-                    (*it)->remove_client(this);
-                    break ;
-                }
-                it++;
-            }
-            this->_channels.erase(my_it);
-            std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
-            return ;
+            (*it)->remove_client(this);
+            break ;
         }
-        my_it++;
+        it++;
     }
-    std::cout << "Client " << this->_nickname << " is not in " << channel_name << " channel." << std::endl;
+    this->_channels.erase(it);
+    std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
     return ;
 }
+
+// void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &channels)
+// {
+//     std::vector<Channel*>:: iterator my_it = this->_channels.begin();
+//     std::vector<Channel*>:: iterator it = channels.begin();
+//     while(my_it != this->_channels.end())
+//     {
+//         if ((*my_it)->get_name() == channel_name)
+//         {
+//             while(it != channels.end())
+//             {
+//                 if ((*it)->get_name() == channel_name)
+//                 {
+//                     (*it)->remove_client(this);
+//                     break ;
+//                 }
+//                 it++;
+//             }
+//             this->_channels.erase(my_it);
+//             std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
+//             return ;
+//         }
+//         my_it++;
+//     }
+//     std::cout << "Client " << this->_nickname << " is not in " << channel_name << " channel." << std::endl;
+//     return ;
+// }
 
 void    Client::leave_channel_from_dest_channel(Channel *channel)
 {
@@ -186,7 +289,7 @@ bool    Client::is_in_channel(std::string channel_name)
     return false;
 }
 
-void    Client::send_message(std::string const &message)
+void    Client::receive_message(std::string const &message)
 {
     std::string msg = message + "\r\n";
     ssize_t bytes_sent = send(this->_socket, msg.c_str(), msg.length(), 0);
@@ -197,24 +300,84 @@ void    Client::send_message(std::string const &message)
 
 int Client::execute_command(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
-    std::vector<std::string>::iterator it = input.begin();
-    while (it != input.end())
+    // verifier le leave_channel a la toute fin
+    if (input[0] == "KICK") // au moins input.size() > 2
     {
-        
+        std::string channel_name = input[1];
+        channel_name.erase(0,1);
+        if (this->_command->verif_channel(channel_name, channels) == 1)
+        {
+            std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
+            return (1);
+        }
+        if (this->_is_operator == false || this->is_operator(channel_name) == 1)
+        {
+            std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
+            return (381);
+        }
+        int res = this->_command->kick(input, clients, channels);
+        return (res);
+    }
+    if (input[0] == "JOIN") // au moins input.size() > 1
+    {
+        int res = this->join_channel(input, channels);
+        return (res);
+        // dans la classe serveur :
+        // if (res == 11)
+        // {   
+        //     std::string new_channel_name = command[1];
+        //     new_channel_name.erase(0,1);
+        //     Channel new_channel(new_channel_name, client, channels)
+        //     client->_is_operator = true;
+        //     client->_operator_channels.push_back(new_channel);
+        //     this->channels.push_back(new_channel);
+        //     client->execute_command(command, client, channels);
+        //     return (11);
+        // }
+    }
+    if (input[0] == "NICK") // au moins input.size() > 1
+    {
+       int res = this->set_nickname(input[1], clients, channels);
+       return (res);
+    }
+    if (input[0] == "USER") // au moins input.size() > 1
+    {
+       int res = this->set_username(input[1], clients, channels);
+       return (res);
+    }
+    if (input[0] == "PRIVMSG") // au moins input.size() > 2
+    {
+        if (input[1][0] == '#')
+        {
+            std::string channel_name = input[1];
+            channel_name.erase(0,1);
+            if (this->_command->verif_channel(channel_name, channels) == 0)
+            {
+                if (this->is_in_channel(channel_name) == false)
+                {
+                    std::cerr << "The client " << _nickname << " is not in " << channel_name << " channel" << std::endl;
+                    return (404);
+                }
+                int res = this->_command->send_message(input, clients, channels);
+                return (res);
+            }
+            std::cerr << "The channel " << channel_name << " doesn't exist" << std::endl;
+            return (1);
+        }
+        int res = this->_command->send_message(input, clients, channels);
+        return (res);
+    }
+    return (0);
+}
+
+bool Client::get_invited_by(Channel *channel)
+{
+    std::vector<Channel*>::iterator it = _invited_channels.begin();
+    while(it != _invited_channels.end())
+    {
+        if ((*it) == channel)
+            return (true);
         it++;
     }
-    
-    // if (this->_is_operator == true && channel_name == this->)
-    // {
-    //     if (command == "KICK")
-    //     {
-    //         return (this->_command->kick(channel_name, client_to_eject, clients, channels)); 
-    //     } 
-    // }   
-    // else
-    // {
-    //     std::cerr << "You are not the operator" << std::endl;
-    //     return (381);
-    // }
-    // return (1);
+    return (false);
 }

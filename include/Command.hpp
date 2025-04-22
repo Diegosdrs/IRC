@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:26:09 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/17 13:44:02 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/22 12:58:50 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ class Command
         ~Command();
 
         // COMMANDES
-        int kick(std::string channel_name, std::string client_to_eject, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int kick(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+
         
         // Fonctions utiles
         int verif_client(std::string client_to_verif, std::vector<Client*> clients);

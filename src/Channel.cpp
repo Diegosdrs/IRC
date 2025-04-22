@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/17 13:48:25 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/22 15:26:00 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@ Channel::Channel(std::string name, Client *opera)
 {
     this->_name = name;
     this->opera = opera;
+    this->_password = "";
+    this->_on_invit = false;
+    this->_limit = -1;
 }
 
 Channel::~Channel()
@@ -46,6 +49,21 @@ Client *Channel::get_operator()
     return (this->opera);
 }
 
+std::string Channel::get_pass()
+{
+    return (this->_password);
+}
+
+int Channel::get_limit()
+{
+    return (this->_limit);
+}
+
+bool Channel::get_on_invit()
+{
+    return (this->_on_invit);
+}
+
 Client *Channel::get_client(std::string client_name)
 {
     std::vector<Client*>::iterator it = this->_clients.begin();
@@ -58,6 +76,11 @@ Client *Channel::get_client(std::string client_name)
         it++;
     }
     return NULL;
+}
+
+void Channel::set_operator()
+{
+    this->opera = NULL;
 }
 
 //----------------------------- METHODES ------------------------------------
@@ -91,4 +114,26 @@ void    Channel::remove_client(Client *client)
         }
         it++;
     }
+}
+
+void    Channel::send_message(std::string const &message)
+{
+    std::vector<Client*>:: iterator it = _clients.begin();
+    while (it != _clients.end())
+    {
+        (*it)->receive_message(message);
+        it++;
+    }
+}
+
+int Channel::get_nbr_of_client()
+{
+    std::vector<Client*>:: iterator it = _clients.begin();
+    int res = 0;
+    while (it != _clients.end())
+    {
+        res++;
+        it++;
+    }
+    return (res);
 }

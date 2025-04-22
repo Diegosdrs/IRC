@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/17 14:57:12 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/22 14:56:10 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,27 +33,28 @@ class Client
         ~Client();
         
         // Set attributs
-        void set_nickname(std::string nickname, std::vector<Client*> clients);
-        void set_username(std::string usrname, std::vector<Client*> clients);
+        int set_nickname(std::string nickname, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int set_username(std::string usrname, std::vector<Client*> clients, std::vector<Channel*>channels);
         void set_operator(bool is_operator);
 
         // Get attributs
         std::string get_nickname();
         std::string get_username();
-        int get_socket();       
+        int get_socket();
+        int is_operator(std::string channel_name);      
 
         // Gestion de la connexion
-        void send_message(const std::string &message);
-        //void receive_message(std::string const &message, std::vector<Client*> clients, std::vector<Channel*>channels);
+        void receive_message(const std::string &message);
 
         // Gestion des canaux
-        int join_channel(std::string channel_name, std::vector<Channel*> &channels);
+        int join_channel(std::vector<std::string> input, std::vector<Channel*> &channels);
         void leave_channel(std::string channel_name, std::vector<Channel*> &channels);
         bool is_in_channel(std::string channel_name);
         void leave_channel_from_dest_channel(Channel *channel);
 
         // Commandes Operateurs
         int execute_command(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        bool get_invited_by(Channel *channel);
                 
         // Fonctions utiles
         //int verif_client(std::string client_to_verif, std::vector<Client*> clients);
@@ -66,6 +67,8 @@ class Client
         std::string _username;
         bool _isAuthenticated;
         bool _is_operator;
+        std::vector<Channel*> _invited_channels;
         std::vector<Channel*> _channels;
+        std::vector<Channel*> _operator_channels;
         Command *_command;
 };
