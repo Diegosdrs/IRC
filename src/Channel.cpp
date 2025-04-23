@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/22 15:26:00 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 13:02:11 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,4 +136,16 @@ int Channel::get_nbr_of_client()
         it++;
     }
     return (res);
+}
+
+//----------------------------- DEBUG ------------------------------------
+
+void Channel::get_all_clients()
+{
+    std::vector<Client*>::iterator it = this->_clients.begin();
+    while(it != _clients.end())
+    {
+        std::cout << "                 " << (*it)->get_username() << std::endl;
+        it++;
+    }
 }

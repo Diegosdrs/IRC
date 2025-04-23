@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:46 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/22 14:58:05 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 12:24:10 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,9 @@ class Channel
         void set_operator();
         int get_limit();
         bool get_on_invit();
+
+        //DEBUG
+        void get_all_clients();
         
         // Statut du Channel
         void  status_channel();

@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 12:04:13 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 13:06:09 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -246,33 +246,6 @@ void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &c
     return ;
 }
 
-// void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &channels)
-// {
-//     std::vector<Channel*>:: iterator my_it = this->_channels.begin();
-//     std::vector<Channel*>:: iterator it = channels.begin();
-//     while(my_it != this->_channels.end())
-//     {
-//         if ((*my_it)->get_name() == channel_name)
-//         {
-//             while(it != channels.end())
-//             {
-//                 if ((*it)->get_name() == channel_name)
-//                 {
-//                     (*it)->remove_client(this);
-//                     break ;
-//                 }
-//                 it++;
-//             }
-//             this->_channels.erase(my_it);
-//             std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
-//             return ;
-//         }
-//         my_it++;
-//     }
-//     std::cout << "Client " << this->_nickname << " is not in " << channel_name << " channel." << std::endl;
-//     return ;
-// }
-
 void    Client::leave_channel_from_dest_channel(Channel *channel)
 {
     std::vector<Channel*>::iterator it = this->_channels.begin();
@@ -333,10 +306,6 @@ int Client::execute_command(std::vector<std::string> input, std::vector<Client*>
     if (input[0] == "JOIN")
     {
         int res = this->join_channel(input, channels);
-        if (res == 0 && input )
-        {
-            
-        }
         return (res);
     }
     if (input[0] == "NICK")
@@ -391,13 +360,69 @@ void    Client::add_channel_operator(Channel *channel)
     this->_operator_channels.push_back(channel);
 }
 
-void Server::display_all()
+
+//----------------------------- DEBUG ------------------------------------
+
+void Client::get_operator()
 {
-    std::vector<Channel*>::iterator it = _channels.begin();
-    while(it != _channel.end())
+    std::vector<Channel*>::iterator it = _operator_channels.begin();
+    while(it != _operator_channels.end())
     {
-        Client *ope = it->get_operator();
-        std::cout << it->get_name() << " : " << ope->get_nickname() << std::endl;
+        std::cout << "    operator --> " << (*it)->get_name() << std::endl;
         it++;
     }
 }
+
+void Client::get_channel()
+{
+    std::vector<Channel*>::iterator it = _channels.begin();
+    while(it != _channels.end())
+    {
+        std::cout << "            --> " << (*it)->get_name() << std::endl;
+        it++;
+    }
+}
+
+void Client::get_invitation()
+{
+    std::vector<Channel*>::iterator it = _channels.begin();
+    while(it != _channels.end())
+    {
+        std::cout << " invitation --> " << (*it)->get_name() << std::endl;
+        it++;
+    }
+}
+
+
+// void Server::display_all_channel()
+// {
+//     std::vector<Channel*>::iterator it = _channels.begin();        
+//     std::cout << std::endl;
+//     while(it != _channel.end())
+//     {
+//         Client *ope = (*it)->get_operator();
+//         std::cout << "  Channel : " << (*it)->get_name() << std::endl;
+//         std::cout <<"   operator --> " ope->get_username() << std::endl;
+//         (*it)->get_all_clients();
+//         std::cout << std::endl;
+//         it++;
+//     }
+//     std::cout << "  -------- end of channels ----------" << std::endl << std::endl;
+// }
+
+
+// void Server::display_all_client()
+// {
+//     std::vector<Client*>::iterator ite = _clients.begin();
+//     std::cout << std::endl;
+//     while(ite != _clients.end())
+//     {
+//         std::cout << "  Client : " << (*it)->get_username() << std::endl;
+//         (*ite)->get_operator();
+//         (*ite)->get_channel();
+//         (*ite)->get_invitation();
+//         std::cout << std::endl;
+//         ite++;
+//     }
+//     std::cout << "  -------- end of clients ----------" << std::endl << std::endl;
+// }

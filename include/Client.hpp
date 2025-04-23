@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 11:59:04 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 12:58:44 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,12 @@ class Client
         std::string get_nickname();
         std::string get_username();
         int get_socket();
-        int is_operator(std::string channel_name);      
+        int is_operator(std::string channel_name);
+        
+        //DEBUG
+        void get_operator();
+        void get_channel();
+        void get_invitation();
 
         // Gestion de la connexion
         void receive_message(const std::string &message);
