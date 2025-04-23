@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/22 14:56:10 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 11:59:04 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Client
         
         // Set attributs
         int set_nickname(std::string nickname, std::vector<Client*> clients, std::vector<Channel*>channels);
-        int set_username(std::string usrname, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int set_username(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
         void set_operator(bool is_operator);
 
         // Get attributs
@@ -55,6 +55,7 @@ class Client
         // Commandes Operateurs
         int execute_command(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
         bool get_invited_by(Channel *channel);
+        void add_channel_operator(Channel *channel);
                 
         // Fonctions utiles
         //int verif_client(std::string client_to_verif, std::vector<Client*> clients);
@@ -65,6 +66,7 @@ class Client
         int _socket;
         std::string _nickname;
         std::string _username;
+        std::string _realname;
         bool _isAuthenticated;
         bool _is_operator;
         std::vector<Channel*> _invited_channels;

@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 09:45:09 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 12:04:13 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ Client::Client(int socket)
     this->_socket = socket;
     this->_nickname = "default";
     this->_username = "default";
+    this->_realname = "default";
     this->_isAuthenticated = false;
     this->_is_operator = false;
     this->_command = new Command();
@@ -118,17 +119,17 @@ int    Client::set_nickname(std::string nickname, std::vector<Client*> clients, 
     return (0);
 }
 
-int    Client::set_username(std::string username, std::vector<Client*> clients, std::vector<Channel*>channels)
+int    Client::set_username(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
     std::vector<Client*>:: iterator it = clients.begin();
-    if (username == "default")
+    if (input[1] == "default")
     {
         std::cerr << "Error : you can't take this username" << std::endl;
         return (1);
     }
     while (it != clients.end())
     {
-        if ((*it)->get_username() == username)
+        if ((*it)->get_username() == input[1])
         {
             std::cerr << "Error: username already in use" << std::endl;
             return (1);
@@ -138,14 +139,15 @@ int    Client::set_username(std::string username, std::vector<Client*> clients, 
     std::vector<Channel*>::iterator ite = channels.begin();
     while(ite != channels.end())
     {
-        if ((*ite)->get_name() == username)
+        if ((*ite)->get_name() == input[1])
         {
             std::cerr << "Error: username already in use" << std::endl;
             return (1);
         }
         ite++;
     }
-    this->_username = username;
+    this->_username = input[1];
+    this->_realname = input[4];
     return (0);
 }
 
@@ -328,31 +330,23 @@ int Client::execute_command(std::vector<std::string> input, std::vector<Client*>
         int res = this->_command->kick(input, clients, channels);
         return (res);
     }
-    if (input[0] == "JOIN") // au moins input.size() > 1
+    if (input[0] == "JOIN")
     {
         int res = this->join_channel(input, channels);
+        if (res == 0 && input )
+        {
+            
+        }
         return (res);
-        // dans la classe serveur :
-        // if (res == 11)
-        // {   
-        //     std::string new_channel_name = command[1];
-        //     new_channel_name.erase(0,1);
-        //     Channel new_channel(new_channel_name, client, channels)
-        //     client->_is_operator = true;
-        //     client->_operator_channels.push_back(new_channel);
-        //     this->channels.push_back(new_channel);
-        //     client->execute_command(command, client, channels);
-        //     return (11);
-        // }
     }
-    if (input[0] == "NICK") // au moins input.size() > 1
+    if (input[0] == "NICK")
     {
        int res = this->set_nickname(input[1], clients, channels);
        return (res);
     }
-    if (input[0] == "USER") // au moins input.size() > 1
+    if (input[0] == "USER")
     {
-       int res = this->set_username(input[1], clients, channels);
+       int res = this->set_username(input, clients, channels);
        return (res);
     }
     if (input[0] == "PRIVMSG") // au moins input.size() > 2
@@ -390,4 +384,20 @@ bool Client::get_invited_by(Channel *channel)
         it++;
     }
     return (false);
+}
+
+void    Client::add_channel_operator(Channel *channel)
+{
+    this->_operator_channels.push_back(channel);
+}
+
+void Server::display_all()
+{
+    std::vector<Channel*>::iterator it = _channels.begin();
+    while(it != _channel.end())
+    {
+        Client *ope = it->get_operator();
+        std::cout << it->get_name() << " : " << ope->get_nickname() << std::endl;
+        it++;
+    }
 }
