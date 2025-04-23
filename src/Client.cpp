@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 14:07:30 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 14:56:46 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -243,7 +243,16 @@ void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &c
         }
         it++;
     }
-    this->_channels.erase(it);
+    std::vector<Channel*>::iterator ite = this->_channels.begin();
+    while(ite != _channels.end())
+    {
+        if ((*ite)->get_name() == channel_name)
+        {
+            this->_channels.erase(it);
+            break ;
+        }
+        ite++;
+    }
     std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
     return ;
 }
