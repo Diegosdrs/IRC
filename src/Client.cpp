@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/22 15:30:55 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 09:45:09 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,11 @@ int Client::is_operator(std::string channel_name)
 int    Client::set_nickname(std::string nickname, std::vector<Client*> clients, std::vector<Channel*> channels)
 {
     std::vector<Client*>:: iterator it = clients.begin();
+    if (nickname == "default")
+    {
+        std::cerr << "Error : you can't take this nickname" << std::endl;
+        return (1);
+    }
     while (it != clients.end())
     {
         if ((*it)->get_nickname() == nickname)
@@ -116,6 +121,11 @@ int    Client::set_nickname(std::string nickname, std::vector<Client*> clients, 
 int    Client::set_username(std::string username, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
     std::vector<Client*>:: iterator it = clients.begin();
+    if (username == "default")
+    {
+        std::cerr << "Error : you can't take this username" << std::endl;
+        return (1);
+    }
     while (it != clients.end())
     {
         if ((*it)->get_username() == username)
