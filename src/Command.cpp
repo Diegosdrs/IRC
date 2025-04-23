@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/22 15:26:23 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 14:08:55 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
 
 int Command::send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
-    if (input[1][0] == '#')
+    if (input[1][0] == '#' || input[1][0] == '!' || input[1][0] == '&' || input[1][0] == '+')
     {
         std::string channel_name = input[1];
         channel_name.erase(0,1);
@@ -79,13 +79,7 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
         {
             if ((*it)->get_nickname() == input[1] || (*it)->get_username() == input[1])
             {
-                std::string msg = input[2] + "\r\n";
-                ssize_t bytes_sent = send((*it)->get_socket(), msg.c_str(), msg.length(), 0);
-                if (bytes_sent < 0)
-                {
-                    std::cerr << "Error : " << (*it)->get_nickname() << " doesn't receive the message" << std::endl;
-                    return (1);
-                }
+                (*it)->receive_message(input[2]);
                 return (0); 
             }
             it++;

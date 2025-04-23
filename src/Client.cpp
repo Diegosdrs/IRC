@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 13:06:09 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/23 14:07:30 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,9 @@ Client::Client(int socket)
     this->_nickname = "default";
     this->_username = "default";
     this->_realname = "default";
-    this->_isAuthenticated = false;
+    this->_is_authenticated = false;
     this->_is_operator = false;
     this->_command = new Command();
-    // premiere connexion entre client et serveur a faire dans la classe serveur ou client ?
-    //this->connect();
-    std::cout << "Client join the connexion !" << std::endl;
 }
 
 
@@ -48,6 +45,7 @@ Client::~Client()
             (*it)->remove_client(this);
         it++;
     }
+    this->_invited_channels.clear();
     this->_channels.clear();
     this->_operator_channels.clear();
 }
@@ -156,10 +154,14 @@ void    Client::set_operator(bool is_operator)
     this->_is_operator = is_operator;
 }
 
+void    Client::set_autentification(bool reponse)
+{
+    this->_is_authenticated = reponse;
+}
+
 //----------------------------- FONCTIONS MEMBRES ------------------------------------
 
 
-// Nickname DOIT etre set-up sinon segfault
 int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*> &channels)
 {
     std::string channel_name = input[1];
@@ -276,17 +278,28 @@ bool    Client::is_in_channel(std::string channel_name)
 
 void    Client::receive_message(std::string const &message)
 {
-    std::string msg = message + "\r\n";
-    ssize_t bytes_sent = send(this->_socket, msg.c_str(), msg.length(), 0);
-    if (bytes_sent < 0)
-        std::cerr << "Error : " << this->_nickname << " doesn't send the message" << std::endl;
-        
+    std::cout << message << std::endl;    
 }
 
 int Client::execute_command(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
+    if (input[0] == "NICK")
+    {
+       int res = this->set_nickname(input[1], clients, channels);
+       return (res);
+    }
+    if (input[0] == "USER")
+    {
+       int res = this->set_username(input, clients, channels);
+       return (res);
+    }
+    if (this->_is_authenticated == false)
+    {
+        std::cout << "Client not authentificated" << std::endl; 
+        return (1);
+    }
     // verifier le leave_channel a la toute fin
-    if (input[0] == "KICK") // au moins input.size() > 2
+    if (input[0] == "KICK")
     {
         std::string channel_name = input[1];
         channel_name.erase(0,1);
@@ -308,19 +321,9 @@ int Client::execute_command(std::vector<std::string> input, std::vector<Client*>
         int res = this->join_channel(input, channels);
         return (res);
     }
-    if (input[0] == "NICK")
-    {
-       int res = this->set_nickname(input[1], clients, channels);
-       return (res);
-    }
-    if (input[0] == "USER")
-    {
-       int res = this->set_username(input, clients, channels);
-       return (res);
-    }
     if (input[0] == "PRIVMSG") // au moins input.size() > 2
     {
-        if (input[1][0] == '#')
+        if (input[1][0] == '#' || input[1][0] == '!' || input[1][0] == '&' || input[1][0] == '+')
         {
             std::string channel_name = input[1];
             channel_name.erase(0,1);
