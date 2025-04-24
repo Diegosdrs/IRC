@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 15:09:28 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/24 15:18:26 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,8 +192,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
 
     // KOL --> arguments
     // IT  --> sans arguments
-    int i = 0;
-    int j = 0;
+    size_t i = 0;
+    size_t j = 0;
     int I = 0;
     int T = 0;
     int K = 0;
@@ -208,16 +208,18 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
             {
                 if (input[i][j] == 'i')
                 {
-                    I++;
-                    int x = -I;
-                    I = I * x;
-
-                    I++;
-                    I *= (I * -1);
+                    if (I < 0)
+                        I--;
+                    else
+                        I++;                      
+                    I *= -1;
                 }
                 if (input[i][j] == 't')
                 {
-                    T++;
+                    if (T < 0)
+                        T--;
+                    else
+                        T++; 
                     T *= -1;
                 }
                 if (input[i][j] == 'k')
@@ -227,7 +229,10 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
-                    K++;
+                    if (K < 0)
+                    K--;
+                    else
+                    K++; 
                     K *= -1;
                 }
                 if (input[i][j] == 'o')
@@ -237,7 +242,10 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
-                    O++;
+                    if (O < 0)
+                        O--;
+                    else
+                        O++; 
                     O *= -1;
                 }
                 if (input[i][j] == 'l')
@@ -248,7 +256,10 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
-                    L++;
+                    if (L < 0)
+                        L--;
+                    else
+                        L++; 
                     L *= -1;
                 }
                 j++;
@@ -261,17 +272,26 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
             {
                 if (input[i][j] == 'i')
                 {
-                    I++;
+                    if (I < 0)
+                        I--;
+                    else
+                        I++; 
                     I *= -1;
                 }
                 if (input[i][j] == 't')
                 {
-                    T++;
+                    if (T < 0)
+                        T--;
+                    else
+                        T++; 
                     T *= -1;
                 }
                 if (input[i][j] == 'k')
                 {
-                    K++;
+                    if (K < 0)
+                        K--;
+                    else
+                        K++; 
                     K *= -1;
                 }
                 if (input[i][j] == 'o')
@@ -281,12 +301,18 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
-                    O++;
+                    if (O < 0)
+                        O--;
+                    else
+                        O++; 
                     O *= -1;
                 }
                 if (input[i][j] == 'l')
                 {
-                    L++;
+                    if (L < 0)
+                        L--;
+                    else
+                        L++; 
                     L *= -1;
                 }
                 j++;
@@ -305,8 +331,13 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     }
     if (I > 0)
     {
-        (*it)->set_on_invit()
+        (*it)->set_on_invit(false);
     }
+    else if (I < 0)
+    {
+        (*it)->set_on_invit(true);
+    }
+    return (0);
 }
 
 
