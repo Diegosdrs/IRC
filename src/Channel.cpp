@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 13:02:11 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/24 15:04:37 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,14 @@ Channel::Channel(){};
 Channel::Channel(std::string name, Client *opera)
 {
     this->_name = name;
-    this->opera = opera;
+    //this->opera = opera;
+    this->_topic = "default";
     this->_password = "";
     this->_on_invit = false;
+    this->_is_restriction_topic = false;
     this->_limit = -1;
+    this->_operator_clients.push_back(opera);
+
 }
 
 Channel::~Channel()
@@ -34,6 +38,7 @@ Channel::~Channel()
             (*it)->leave_channel_from_dest_channel(this);
         it++;
     }
+    this->_operator_clients.clear();
     this->_clients.clear();
 }
 
@@ -44,9 +49,23 @@ std::string Channel::get_name()
     return (this->_name);
 }
 
-Client *Channel::get_operator()
+bool Channel::get_operator_bool()
 {
-    return (this->opera);
+    if (this->_operator_clients.empty())
+        return (false);
+    return (true);
+}
+
+Client *Channel::get_operator(Client *client)
+{
+    std::vector<Client*>::iterator it = _operator_clients.begin();
+    while (it != _operator_clients.end())
+    {
+        if(client == (*it))
+            return (*it);
+        it++;
+    }
+    return (NULL);
 }
 
 std::string Channel::get_pass()
@@ -64,6 +83,11 @@ bool Channel::get_on_invit()
     return (this->_on_invit);
 }
 
+bool Channel::get_restriction_topic()
+{
+    return (this->_is_restriction_topic);
+}
+
 Client *Channel::get_client(std::string client_name)
 {
     std::vector<Client*>::iterator it = this->_clients.begin();
@@ -78,9 +102,33 @@ Client *Channel::get_client(std::string client_name)
     return NULL;
 }
 
-void Channel::set_operator()
+void Channel::set_operator(Client* client)
 {
-    this->opera = NULL;
+    std::vector<Client*>::iterator it = _operator_clients.begin();
+    while(it != _operator_clients.end())
+    {
+        if (*it == client)
+        {
+            _operator_clients.erase(it);
+            return ;
+        }
+        it++;
+    }
+}
+
+std::string Channel::get_topic()
+{
+    return (this->_topic);
+}
+
+void Channel::set_on_invit(bool reponse)
+{
+    this->_on_invit = reponse;
+}
+
+void Channel::set_topic(std::string topic_message)
+{
+    this->_topic = topic_message;
 }
 
 //----------------------------- METHODES ------------------------------------

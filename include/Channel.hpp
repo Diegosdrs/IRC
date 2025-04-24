@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:46 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 12:24:10 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/24 15:04:12 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,17 @@ class Channel
         
         // Get attributs
         std::string get_name();
-        Client *get_operator();
+        bool get_operator_bool();
+        Client *get_operator(Client *client);
         Client *get_client(std::string client_name);
         std::string get_pass();
-        void set_operator();
+        void set_operator(Client *client);
         int get_limit();
         bool get_on_invit();
+        void set_on_invit(bool reponse);
+        bool get_restriction_topic();
+        std::string get_topic();
+        void set_topic(std::string topic_message);
 
         //DEBUG
         void get_all_clients();
@@ -50,6 +55,8 @@ class Channel
         std::string _password;
         int _limit;
         bool _on_invit;
+        bool _is_restriction_topic;
+        std::string _topic;
         std::vector<Client*> _clients;
-        Client *opera;
+        std::vector<Client*> _operator_clients;
 };

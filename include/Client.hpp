@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 13:52:20 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/24 13:15:55 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,19 +49,25 @@ class Client
         void get_channel();
         void get_invitation();
 
-        // Gestion de la connexion
-        void receive_message(const std::string &message);
-
-        // Gestion des canaux
+        // Gestion des channels
         int join_channel(std::vector<std::string> input, std::vector<Channel*> &channels);
         void leave_channel(std::string channel_name, std::vector<Channel*> &channels);
         bool is_in_channel(std::string channel_name);
         void leave_channel_from_dest_channel(Channel *channel);
 
-        // Commandes Operateurs
+        // Commandes
         int execute_command(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int privmsg(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int kick(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int topic(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+
+        // Fonctions utiles
+        void receive_message(const std::string &message);
         bool get_invited_by(Channel *channel);
         void add_channel_operator(Channel *channel);
+        void add_channel_invited(Channel *channel);
 
     private:
         int _socket;

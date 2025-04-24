@@ -6,17 +6,21 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/23 14:08:55 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/24 15:09:28 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Command.hpp"
 #include "../include/Client.hpp"
 #include "../include/Channel.hpp"
+#include <sstream>
 
 Command::Command(){};
 
 Command::~Command(){};
+
+//----------------------------- COMMANDES ------------------------------------
+
 
 int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
@@ -35,8 +39,6 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
             Client *test = (*it)->get_client(input[2]);
             if (test != NULL)
             {
-                // (*it)->remove_client(test);
-                // test->_channels.erase(it);
                 test->leave_channel(channel_name, channels);
                 if (input.size() > 3)
                     std::cout << input[2] << " is ejected from " << channel_name << " channel because " << input[3] << std::endl;
@@ -44,7 +46,6 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
                     std::cout << input[2] << " is ejected from " << channel_name << " channel" << std::endl;
                 return (0);
             }
-            // ERROR
             std::cout << "This client is not in this channel" << std::endl;
             return (1);
         }
@@ -77,7 +78,7 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
         std::vector<Client*>::iterator it = clients.begin();
         while (it != clients.end())
         {
-            if ((*it)->get_nickname() == input[1] || (*it)->get_username() == input[1])
+            if ((*it)->get_nickname() == input[1])
             {
                 (*it)->receive_message(input[2]);
                 return (0); 
@@ -88,6 +89,229 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
     std::cerr << "The client " << input[1] << " doesn't exist" << std::endl;
     return (401);
 }
+
+
+int Command::invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
+{
+    if (this->verif_client(input[1], clients) == 1)
+    {
+        std::cout << "This client doesn't exist" << std::endl;
+        return (1);
+    }
+    std::string channel_name = input[2];
+    channel_name.erase(0,1);
+    std::vector<Channel*>::iterator it = channels.begin();
+    while (it != channels.end())
+    {
+        if (channel_name == (*it)->get_name())
+        {
+            if ((*it)->get_on_invit() == false)
+            {
+                std::cerr << "Error: This channel doesn't need invitation." << std::endl;
+                return (1);
+            }
+            if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
+            {
+                std::cerr << "Error: This channel is full." << std::endl;
+                return (1);
+            }
+        }
+        it++;
+    }
+    std::vector<Client*>::iterator ite = clients.begin();
+    while(ite != clients.end())
+    {
+        if (input[1] == (*ite)->get_nickname())
+        {
+            if((*ite)->is_in_channel(channel_name) == false)
+            {
+                std::string message_begin = "You have been invited on ";
+                std::string message_end = " channel";
+                std::string message = message_begin + input[2] + message_end;
+                (*ite)->receive_message(message);
+                (*ite)->add_channel_invited(*it);
+                return (0);
+            }
+            std::cerr << "Error : this client is already in this channel" << std::endl;
+            return (1);
+        }
+        ite++;
+    }
+    return (0);
+}
+
+int Command::topic(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
+{
+    (void)clients;
+    std::string channel_name = input[1];
+    channel_name.erase(0,1);
+    std::vector<Channel*>::iterator it = channels.begin();
+    while (it != channels.end())
+    {
+        if (channel_name == (*it)->get_name())
+        {
+            if (input.size() == 2)
+            {
+                if ((*it)->get_topic() != "default")
+                {
+                    std::cout << "The topic is " << (*it)->get_topic() << std::endl;
+                    return (0); // 332
+                }
+                std::cerr << "This channel doesn't have topic yet" << std::endl;
+                return (331);
+            }
+            else
+            {
+                (*it)->set_topic(input[2]);
+                std::string message = "The topic of " + channel_name + " is " + input[2];
+                (*it)->send_message(message);
+                return (0);
+            }
+        }
+        it++;
+    }
+    return (0);
+}
+
+int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
+{
+    (void)clients;
+    std::string channel_name = input[1];
+    channel_name.erase(0,1);
+    std::vector<Channel*>::iterator it = channels.begin();
+    
+    if (input.size() >= 2)
+        input.erase(input.begin(), input.begin() + 2);
+    
+    if (input[0][0] != '+' && input[0][0] != '-')
+    {
+        std::cerr << "Error : bad arguments" << std::endl;
+        return (1);
+    }
+
+
+    // KOL --> arguments
+    // IT  --> sans arguments
+    int i = 0;
+    int j = 0;
+    int I = 0;
+    int T = 0;
+    int K = 0;
+    int O = 0;
+    int L = 0;
+    int limit_res = 0;
+    while(i < input.size())
+    {
+        if (input[i][j] == '+')
+        {
+            while(j < input[i].size())
+            {
+                if (input[i][j] == 'i')
+                {
+                    I++;
+                    int x = -I;
+                    I = I * x;
+
+                    I++;
+                    I *= (I * -1);
+                }
+                if (input[i][j] == 't')
+                {
+                    T++;
+                    T *= -1;
+                }
+                if (input[i][j] == 'k')
+                {
+                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
+                    K++;
+                    K *= -1;
+                }
+                if (input[i][j] == 'o')
+                {
+                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
+                    O++;
+                    O *= -1;
+                }
+                if (input[i][j] == 'l')
+                {
+                    limit_res = is_number(input[i + 1]);
+                    if (limit_res == 0)
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
+                    L++;
+                    L *= -1;
+                }
+                j++;
+            }
+            j = 0;
+        }
+        if (input[i][j] == '-')
+        {
+            while(j < input[i].size())
+            {
+                if (input[i][j] == 'i')
+                {
+                    I++;
+                    I *= -1;
+                }
+                if (input[i][j] == 't')
+                {
+                    T++;
+                    T *= -1;
+                }
+                if (input[i][j] == 'k')
+                {
+                    K++;
+                    K *= -1;
+                }
+                if (input[i][j] == 'o')
+                {
+                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
+                    O++;
+                    O *= -1;
+                }
+                if (input[i][j] == 'l')
+                {
+                    L++;
+                    L *= -1;
+                }
+                j++;
+            }
+            j = 0;
+        }
+        i++;
+    }
+    while (it != channels.end())
+    {
+        if (channel_name == (*it)->get_name())
+        {
+            break;
+        }
+        it++;
+    }
+    if (I > 0)
+    {
+        (*it)->set_on_invit()
+    }
+}
+
+
+//----------------------------- FONCTIONS UTILES ------------------------------------
+
 
 
 int Command::verif_client(std::string client_to_verif, std::vector<Client*> clients)
@@ -116,4 +340,13 @@ int Command::verif_channel(std::string channel_to_verif, std::vector<Channel*> c
         it++;
     }
     return (1);
+}
+
+int Command::is_number(std::string nbr)
+{
+    std::istringstream stream(nbr);
+    int number;
+    if (stream >> number && stream.eof())
+        return number;
+    return 0;
 }
