@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 13:15:55 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 10:57:42 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ class Client
         void receive_message(const std::string &message);
         bool get_invited_by(Channel *channel);
         void add_channel_operator(Channel *channel);
+        void supp_channel_operator(Channel *channel);
         void add_channel_invited(Channel *channel);
 
     private:

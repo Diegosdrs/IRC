@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 14:45:19 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 10:59:08 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -524,6 +524,19 @@ void    Client::receive_message(std::string const &message)
     std::cout << message << std::endl;    
 }
 
+void    Client::supp_channel_operator(Channel *channel)
+{
+    std::vector<Channel*>::iterator it = this->_operator_channels.begin();
+    while (it != this->_operator_channels.end())
+    {
+        if ((*it) == channel)
+        {
+            this->_operator_channels.erase(it);
+            return ;
+        }
+        it++;
+    }
+}
 
 //----------------------------- DEBUG ------------------------------------
 

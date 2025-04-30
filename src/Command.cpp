@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 15:18:26 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 10:59:20 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,8 +188,15 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
         std::cerr << "Error : bad arguments" << std::endl;
         return (1);
     }
-
-
+    while (it != channels.end())
+    {
+        if (channel_name == (*it)->get_name())
+        {
+            break;
+        }
+        it++;
+    }
+    
     // KOL --> arguments
     // IT  --> sans arguments
     size_t i = 0;
@@ -199,6 +206,11 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     int K = 0;
     int O = 0;
     int L = 0;
+    int I_int = 0;
+    int T_int = 0;
+    int K_int = 0;
+    int O_int = 0;
+    int L_int = 0;
     int limit_res = 0;
     while(i < input.size())
     {
@@ -208,6 +220,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
             {
                 if (input[i][j] == 'i')
                 {
+                    if (I_int == 0)
+                        I_int = 1;
                     if (I < 0)
                         I--;
                     else
@@ -216,6 +230,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 't')
                 {
+                    if (T_int == 0)
+                        T_int = 1;
                     if (T < 0)
                         T--;
                     else
@@ -224,24 +240,50 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 'k')
                 {
+                    if (K_int == 0)
+                        K_int = 1;
+                    if (i + 1 >= input.size())
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
                     {
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
+                    if (!(*it)->get_pass().empty())
+                    {
+                        std::cerr << "Error : this channel has already a password" << std::endl;
+                        return (1);
+                    }
+                    if (is_valid_password(input[i + 1]) == 1)
+                    {
+                        std::cerr << "Error : incorrect password definition" << std::endl;
+                        return (1);
+                    }
+                    (*it)->set_pass(input[i + 1]);
                     if (K < 0)
-                    K--;
+                        K--;
                     else
-                    K++; 
+                        K++; 
                     K *= -1;
                 }
                 if (input[i][j] == 'o')
                 {
+                    if (O_int == 0)
+                        O_int = 1;
+                    if (i + 1 >= input.size())
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
                     {
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
+                    is_valid_client(input, i + 1, clients, *it);
                     if (O < 0)
                         O--;
                     else
@@ -250,6 +292,18 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 'l')
                 {
+                    if (L_int == 0)
+                        L_int = 1;
+                    if (i + 1 >= input.size())
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
+                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
                     limit_res = is_number(input[i + 1]);
                     if (limit_res == 0)
                     {
@@ -272,6 +326,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
             {
                 if (input[i][j] == 'i')
                 {
+                    if (I_int == 0)
+                        I_int = 2;
                     if (I < 0)
                         I--;
                     else
@@ -280,6 +336,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 't')
                 {
+                    if (T_int == 0)
+                        T = 2;
                     if (T < 0)
                         T--;
                     else
@@ -288,6 +346,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 'k')
                 {
+                    if (K_int == 0)
+                        K_int = 2;
                     if (K < 0)
                         K--;
                     else
@@ -296,11 +356,19 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 'o')
                 {
+                    if (O_int == 0)
+                        O_int = 2;
+                    if (i + 1 >= input.size())
+                    {
+                        std::cerr << "Error : bad arguments" << std::endl;
+                        return (1);
+                    }
                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
                     {
                         std::cerr << "Error : bad arguments" << std::endl;
                         return (1);
                     }
+                    is_valid_client_2(input, i + 1, clients, *it);
                     if (O < 0)
                         O--;
                     else
@@ -309,6 +377,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                 }
                 if (input[i][j] == 'l')
                 {
+                    if (L_int == 0)
+                        L_int = 2;
                     if (L < 0)
                         L--;
                     else
@@ -321,22 +391,20 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
         }
         i++;
     }
-    while (it != channels.end())
-    {
-        if (channel_name == (*it)->get_name())
-        {
-            break;
-        }
-        it++;
-    }
-    if (I > 0)
-    {
-        (*it)->set_on_invit(false);
-    }
-    else if (I < 0)
-    {
+    if (I < 0 && I_int == 1)
         (*it)->set_on_invit(true);
-    }
+    if (I > 0 && I_int == 2)
+        (*it)->set_on_invit(false);
+    if (T < 0 && T_int == 1)
+        (*it)->set_restriction_topic(true);
+    if (T > 0 && T_int == 2)
+        (*it)->set_restriction_topic(false);
+    if (K < 0 && K_int == 2)
+        (*it)->set_pass("");
+    if (L < 0 && L_int == 1)
+        (*it)->set_limit(limit_res);
+    if (L > 0 && L_int == 2)
+        (*it)->set_limit(-1);
     return (0);
 }
 
@@ -380,4 +448,85 @@ int Command::is_number(std::string nbr)
     if (stream >> number && stream.eof())
         return number;
     return 0;
+}
+
+int Command::is_valid_password(std::string pass)
+{
+    if (pass.empty())
+        return (1);
+    if (pass.find(' ') != std::string::npos)
+        return (1);
+    if (pass.length() > 32)
+        return (1);
+    return (0);
+}
+
+int Command::is_valid_client(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel)
+{
+    size_t i = index;
+    std::string client_to_verif;
+    while(i < input.size())
+    {
+        if (input[i][0] == '+' || input[1][0] == '-')
+            return (1);
+        client_to_verif = input[i];
+        if (channel->get_client(client_to_verif) == NULL)
+        {
+            std::cerr << "Error : client not in this channel" << std::endl;
+            return (1);
+        }
+        std::vector<Client*>::iterator it = clients.begin();
+        while(it != clients.end())
+        {
+            if ((*it)->get_nickname() == client_to_verif || (*it)->get_username() == client_to_verif)
+            {
+                if (channel->get_operator(*it) != NULL)
+                {
+                    std::cerr << "Error : client already operator" << std::endl;
+                    return (1);
+                }
+                channel->add_operator(*it);
+                (*it)->add_channel_operator(channel);
+                break ; 
+            }
+            it++;
+        }
+        i++;
+    }
+    return (0);
+}
+
+int Command::is_valid_client_2(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel)
+{
+    size_t i = index;
+    std::string client_to_verif;
+    while(i < input.size())
+    {
+        if (input[i][0] == '+' || input[1][0] == '-')
+            return (1);
+        client_to_verif = input[i];
+        if (channel->get_client(client_to_verif) == NULL)
+        {
+            std::cerr << "Error : client not in this channel" << std::endl;
+            return (1);
+        }
+        std::vector<Client*>::iterator it = clients.begin();
+        while(it != clients.end())
+        {
+            if ((*it)->get_nickname() == client_to_verif || (*it)->get_username() == client_to_verif)
+            {
+                if (channel->get_operator(*it) == NULL)
+                {
+                    std::cerr << "Error : client not operator" << std::endl;
+                    return (1);
+                }
+                channel->supp_operator(*it);
+                (*it)->supp_channel_operator(channel);
+                break ; 
+            }
+            it++;
+        }
+        i++;
+    }
+    return (0);
 }

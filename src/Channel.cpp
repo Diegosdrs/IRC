@@ -6,13 +6,14 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 15:04:37 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 10:56:03 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Channel.hpp"
 #include "../include/Client.hpp"
 #include "../include/Command.hpp"
+#include <algorithm> 
 
 Channel::Channel(){};
 
@@ -116,6 +117,21 @@ void Channel::set_operator(Client* client)
     }
 }
 
+void Channel::set_pass(std::string pass)
+{
+    this->_password = pass;
+}
+
+void Channel::set_limit(int limit)
+{
+    this->_limit= limit;
+}
+
+void Channel::set_restriction_topic(bool response)
+{
+    this->_is_restriction_topic = response;
+}
+
 std::string Channel::get_topic()
 {
     return (this->_topic);
@@ -184,6 +200,25 @@ int Channel::get_nbr_of_client()
         it++;
     }
     return (res);
+}
+
+void    Channel::add_operator(Client *client)
+{
+    this->_operator_clients.push_back(client);
+}
+
+void    Channel::supp_operator(Client *client)
+{
+    std::vector<Client*>::iterator it = this->_operator_clients.begin();
+    while (it != this->_operator_clients.end())
+    {
+        if ((*it) == client)
+        {
+            this->_operator_clients.erase(it);
+            return ;
+        }
+        it++;
+    }
 }
 
 //----------------------------- DEBUG ------------------------------------

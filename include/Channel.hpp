@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:46 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 15:04:12 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 10:48:38 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,11 @@ class Channel
         bool get_on_invit();
         void set_on_invit(bool reponse);
         bool get_restriction_topic();
+        void set_restriction_topic(bool response);
         std::string get_topic();
         void set_topic(std::string topic_message);
+        void set_pass(std::string pass);
+        void set_limit(int limit);
 
         //DEBUG
         void get_all_clients();
@@ -49,6 +52,8 @@ class Channel
         void remove_client(Client *client);
         void send_message(const std::string &message);
         int get_nbr_of_client();
+        void add_operator(Client *client);
+        void supp_operator(Client *client);
 
     private:
         std::string _name;

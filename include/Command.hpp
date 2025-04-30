@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:26:09 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/24 14:08:52 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 10:07:29 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,9 @@ class Command
         int verif_client(std::string client_to_verif, std::vector<Client*> clients);
         int verif_channel(std::string channel_to_verif, std::vector<Channel*> channels);
         int is_number(std::string nbr);
+        int is_valid_password(std::string pass);
+        int is_valid_client(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel);
+        int is_valid_client_2(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel);
 
     private:
 };
