@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:40:18 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 15:04:29 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,6 +186,17 @@ void    Channel::send_message(std::string const &message)
     while (it != _clients.end())
     {
         (*it)->receive_message(message, (*it)->get_socket());
+        it++;
+    }
+}
+
+void    Channel::send_message_except(std::string const &message, Client *client)
+{
+    std::vector<Client*>:: iterator it = _clients.begin();
+    while (it != _clients.end())
+    {
+        if ((*it) != client)
+            (*it)->receive_message(message, (*it)->get_socket());
         it++;
     }
 }

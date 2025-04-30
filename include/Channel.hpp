@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:46 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:34:28 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 15:04:12 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,7 @@ class Channel
         void add_client(Client *client);
         void remove_client(Client *client);
         void send_message(const std::string &message);
+        void send_message_except(const std::string &message, Client *client);
         int  get_nbr_of_client();
         void add_operator(Client *client);
         void supp_operator(Client *client);

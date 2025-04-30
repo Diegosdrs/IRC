@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:45:46 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 15:05:10 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
 }
 
 
-int Command::send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
+int Command::send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client)
 {
     if (input[1][0] == '#' || input[1][0] == '!' || input[1][0] == '&' || input[1][0] == '+')
     {
@@ -66,8 +66,10 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
         {
             if ((*it)->get_name() == channel_name)
             {
-                (*it)->send_message(input[2]);
-                return (1);
+                std::string message;
+                message = ":" + client->get_nickname() + "!~" + client->get_username() + "@localhost PRIVMSG #" + channel_name + " :" + input[2];
+                (*it)->send_message_except(message, client);
+                return (0);
             }
             it++;
         }
@@ -80,13 +82,15 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
         {
             if ((*it)->get_nickname() == input[1])
             {
-                //(*it)->receive_message(input[2]);
+                std::string message;
+                message = ":" + client->get_nickname() + " PRIVMSG " + input[1] + " :" + input[2];
+                (*it)->receive_message(message, (*it)->get_socket());
                 return (0); 
             }
             it++;
         }
     }
-    std::cerr << "The client " << input[1] << " doesn't exist" << std::endl;
+    //std::cerr << "The client " << input[1] << " doesn't exist" << std::endl;
     return (401);
 }
 

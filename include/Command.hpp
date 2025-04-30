@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:26:09 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 10:07:29 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:55:01 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class Command
 
         // COMMANDES
         int kick(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
-        int send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client);
         int invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
         int topic(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
         int mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);

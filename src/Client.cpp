@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:44:22 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:55:32 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,16 +379,16 @@ int Client::privmsg(std::vector<std::string> input, std::vector<Client*> clients
         {
             if (this->is_in_channel(channel_name) == false)
             {
-                std::cerr << "The client " << _nickname << " is not in " << channel_name << " channel" << std::endl;
+                //std::cerr << "The client " << _nickname << " is not in " << channel_name << " channel" << std::endl;
                 return (404);
             }
-            int res = this->_command->send_message(input, clients, channels);
+            int res = this->_command->send_message(input, clients, channels, this);
             return (res);
         }
-        std::cerr << "The channel " << channel_name << " doesn't exist" << std::endl;
-        return (1);
+        //std::cerr << "The channel " << channel_name << " doesn't exist" << std::endl;
+        return (403);
     }
-    int res = this->_command->send_message(input, clients, channels);
+    int res = this->_command->send_message(input, clients, channels, this);
     return (res);
 }
 
