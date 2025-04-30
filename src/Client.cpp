@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:55:32 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 15:06:34 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -344,8 +344,6 @@ int Client::execute_command(std::vector<std::string> input, std::vector<Client*>
         int res = this->privmsg(input, clients, channels);
         return (res);
     }
-    // Commandes operator a suivre
-    // si l'operator quitte le channel bloquer les commandes dans CHAQUE COMMANDE
     if (input[0] == "KICK")
     {
         int res = this->kick(input, clients, channels);
