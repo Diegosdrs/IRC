@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 10:59:20 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:45:46 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
         {
             if ((*it)->get_nickname() == input[1])
             {
-                (*it)->receive_message(input[2]);
+                //(*it)->receive_message(input[2]);
                 return (0); 
             }
             it++;
@@ -128,7 +128,7 @@ int Command::invite(std::vector<std::string> input, std::vector<Client*> clients
                 std::string message_begin = "You have been invited on ";
                 std::string message_end = " channel";
                 std::string message = message_begin + input[2] + message_end;
-                (*ite)->receive_message(message);
+                //(*ite)->receive_message(message);
                 (*ite)->add_channel_invited(*it);
                 return (0);
             }

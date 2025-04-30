@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 10:56:03 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:40:18 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,7 +185,7 @@ void    Channel::send_message(std::string const &message)
     std::vector<Client*>:: iterator it = _clients.begin();
     while (it != _clients.end())
     {
-        (*it)->receive_message(message);
+        (*it)->receive_message(message, (*it)->get_socket());
         it++;
     }
 }
@@ -219,6 +219,18 @@ void    Channel::supp_operator(Client *client)
         }
         it++;
     }
+}
+
+std::string Channel::join_message()
+{
+    std::vector<Client*>::iterator it = this->_clients.begin();
+    std::string mess = "";
+    while (it != this->_clients.end())
+    {
+        mess = mess + " " + (*it)->get_nickname();
+        it++;
+    }
+    return (mess);
 }
 
 //----------------------------- DEBUG ------------------------------------

@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 10:59:08 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:44:22 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include "../include/Command.hpp"
 #include "../include/Channel.hpp"
 #include <algorithm> 
+#include <cerrno>
+
 
 Client::Client(){};
 
@@ -93,19 +95,29 @@ int    Client::set_nickname(std::string nickname, std::vector<Client*> clients, 
     std::vector<Client*>:: iterator it = clients.begin();
     if (nickname == "default")
     {
-        std::cerr << "Error : you can't take this nickname" << std::endl;
+        //std::cerr << "Error : you can't take this nickname" << std::endl;
         return (1);
     }
     while (it != clients.end())
     {
         if ((*it)->get_nickname() == nickname)
         {
-            std::cerr << "Error: nickname already in use" << std::endl;
-            return (1);
+            //std::cerr << "Error: nickname already in use" << std::endl;
+            return (433);
         }
         it++;
     }
+    std::string old_nick = this->_nickname;
     this->_nickname = nickname;
+    if(old_nick == "default")
+        return (0);
+    std::string message;
+    
+    if (this->_username == "default")
+        message = ":" + old_nick + "!~ *" + "@localhost NICK :" + this->_nickname;
+    if (this->_username != "default")
+        message = ":" + old_nick + "!~" + this->_username + "@localhost NICK :" + this->_nickname;
+    this->send_message(message, clients, channels);
     return (0);
 }
 
@@ -113,22 +125,22 @@ int    Client::set_username(std::vector<std::string> input, std::vector<Client*>
 {
     (void)channels;
     std::vector<Client*>:: iterator it = clients.begin();
-    if (this->_username != "default")
+    if (this->_username != "default" && this->_is_authenticated == true)
     {
-        std::cerr << "Error : you already have an username" << std::endl;
-        return (1);
+        //std::cerr << "Error : you already have an username" << std::endl;
+        return (462);
     }
     if (input[1] == "default")
     {
-        std::cerr << "Error : you can't take this username" << std::endl;
+        //std::cerr << "Error : you can't take this username" << std::endl;
         return (1);
     }
     while (it != clients.end())
     {
         if ((*it)->get_username() == input[1])
         {
-            std::cerr << "Error: username already in use" << std::endl;
-            return (1);
+            //std::cerr << "Error: username already in use" << std::endl;
+            return (433);
         }
         it++;
     }
@@ -156,12 +168,14 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
     std::string channel_name = input[1];
     channel_name.erase(0, 1);
     std::vector<Channel*>:: iterator my_it = this->_channels.begin();
+    if (this->_command->verif_channel(channel_name, channels) == 1)
+        return (403);
     while(my_it != this->_channels.end())
     {
         if ((*my_it)->get_name() == channel_name)
         {
-            std::cout << "Client " << this->_nickname << " already is in " << channel_name << " channel." << std::endl;
-            return (443);
+            //std::cout << "Client " << this->_nickname << " already is in " << channel_name << " channel." << std::endl;
+            return (0);
         }
         my_it++;
     }
@@ -174,17 +188,17 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
             {
                 if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
                 {
-                    std::cerr << "Error : you haven't been invited" << std::endl;
+                    //std::cerr << "Error : you haven't been invited" << std::endl;
                     return (473);
                 }
                 if (input[2] != (*it)->get_pass() && (*it)->get_pass() != "")
                 {
-                    std::cerr << "Error : it is not the right password" << std::endl;
+                    //std::cerr << "Error : it is not the right password" << std::endl;
                     return (475);
                 }
                 if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
                 {
-                    std::cerr << "Channel " << channel_name << " is full" << std::endl;
+                    //std::cerr << "Channel " << channel_name << " is full" << std::endl;
                     return (471);
                 }
                 (*it)->add_client(this);
@@ -197,24 +211,28 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
                         this->_invited_channels.erase(invited_it);
                     }
                 }             
-                std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
-                return 0;
+                //std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
+                std::string message;
+                message = ":" + this->_nickname + "!~" + this->_username+ "@localhost JOIN :#" + (*it)->get_name();
+                (*it)->send_message(message);
+                this->join_message(*it);
+                return (0);
             }
             else
             {
                 if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
                 {
-                    std::cerr << "Error : you haven't been invited" << std::endl;
+                    //std::cerr << "Error : you haven't been invited" << std::endl;
                     return (473);
                 }
                 if ((*it)->get_pass() != "")
                 {
-                    std::cerr << "Error : you need a password" << std::endl;
+                    //std::cerr << "Error : you need a password" << std::endl;
                     return (475);
                 }
                 if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
                 {
-                    std::cerr << "Channel " << channel_name << " is full" << std::endl;
+                    //std::cerr << "Channel " << channel_name << " is full" << std::endl;
                     return (471);
                 }
                 (*it)->add_client(this);
@@ -227,8 +245,12 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
                         this->_invited_channels.erase(invited_it);
                     }
                 }
-                std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
-                return 0;
+                //std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
+                std::string message;
+                message = ":" + this->_nickname + "!~" + this->_username+ "@localhost JOIN :#" + (*it)->get_name();
+                (*it)->send_message(message);
+                this->join_message(*it);
+                return (0);
             }
         }
         it++;
@@ -519,10 +541,14 @@ void    Client::add_channel_invited(Channel *channel)
     this->_invited_channels.push_back(channel);
 }
 
-void    Client::receive_message(std::string const &message)
+void    Client::receive_message(std::string const &message, int socket)
 {
-    std::cout << message << std::endl;    
+    std::string full_message = message + "\r\n";
+    int bytes = send(socket, message.c_str(), message.length(), 0);
+    if (bytes > 0)
+        throw std::runtime_error(std::string("send: ") + std::strerror(errno));
 }
+
 
 void    Client::supp_channel_operator(Channel *channel)
 {
@@ -536,6 +562,45 @@ void    Client::supp_channel_operator(Channel *channel)
         }
         it++;
     }
+}
+
+void Client::send_message(std::string message, std::vector<Client*> clients, std::vector<Channel*>channels)
+{
+    (void)channels;
+    std::vector<Client*> buffer_client;
+    std::vector<Channel*>::iterator it = this->_channels.begin();
+    while (it != this->_channels.end())
+    {
+        std::vector<Client*>::iterator ite = clients.begin();
+        while (ite != clients.end())
+        {
+            if((*it)->get_client((*ite)->get_nickname()) != NULL && std::find(buffer_client.begin(), buffer_client.end(), *ite) == buffer_client.end())
+            {
+                buffer_client.push_back(*ite);
+            }
+            ite++;
+        }
+        it++;
+    }
+    for (size_t i = 0; i < buffer_client.size(); ++i)
+        buffer_client[i]->receive_message(message, buffer_client[i]->get_socket());
+}
+
+void Client::join_message(Channel *channel)
+{
+    if (channel->get_topic() != "default")
+    {
+        std::string message1;
+        message1 = "IRC 332 " + this->_nickname + " #" + channel->get_name() + " :" + channel->get_topic();
+        this->receive_message(message1, this->_socket);
+    }
+    std::string join = channel->join_message();
+    std::string message2;
+    message2 = "IRC 353 " + this->_nickname + " = #" + channel->get_name() + " :" + join;
+    this->receive_message(message2, this->_socket);
+    std::string message3;
+    message3 = "IRC 366 " + this->_nickname + " #" + channel->get_name() + " :" + "End of /NAMES list.";
+    this->receive_message(message3, this->_socket);
 }
 
 //----------------------------- DEBUG ------------------------------------

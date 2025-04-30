@@ -6,12 +6,13 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 10:57:42 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/04/30 14:27:04 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#include <cstring>
 #include <string>
 #include <memory>
 #include <list>
@@ -64,11 +65,13 @@ class Client
         int mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
 
         // Fonctions utiles
-        void receive_message(const std::string &message);
+        void receive_message(const std::string &message, int socket);
         bool get_invited_by(Channel *channel);
         void add_channel_operator(Channel *channel);
         void supp_channel_operator(Channel *channel);
         void add_channel_invited(Channel *channel);
+        void send_message(std::string message, std::vector<Client*> clients, std::vector<Channel*>channels);
+        void join_message(Channel *channel);
 
     private:
         int _socket;
