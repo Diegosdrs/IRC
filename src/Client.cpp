@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/05 11:01:50 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/05 13:32:09 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,6 +157,11 @@ void    Client::set_operator(bool is_operator)
 void    Client::set_autentification(bool reponse)
 {
     this->_is_authenticated = reponse;
+}
+
+bool Client::get_autentification()
+{
+    return (this->_is_authenticated);
 }
 
 
@@ -364,6 +369,10 @@ int Client::execute_command(std::vector<std::string> input, std::vector<Client*>
         int res = this->mode(input, clients, channels);
         return (res);
     }
+    if (input[0] == "XX")
+        this->XX();
+    if (input[0] == "XX")
+        this->XXX(input, channels);
     return (0);
 }
 
@@ -589,15 +598,15 @@ void Client::join_message(Channel *channel)
     if (channel->get_topic() != "default")
     {
         std::string message1;
-        message1 = "IRC 332 " + this->_nickname + " #" + channel->get_name() + " :" + channel->get_topic();
+        message1 = ":IRC 332 " + this->_nickname + " #" + channel->get_name() + " :" + channel->get_topic();
         this->receive_message(message1, this->_socket);
     }
     std::string join = channel->join_message();
     std::string message2;
-    message2 = "IRC 353 " + this->_nickname + " = #" + channel->get_name() + " :" + join;
+    message2 = ":IRC 353 " + this->_nickname + " = #" + channel->get_name() + " :" + join;
     this->receive_message(message2, this->_socket);
     std::string message3;
-    message3 = "IRC 366 " + this->_nickname + " #" + channel->get_name() + " :" + "End of /NAMES list.";
+    message3 = ":IRC 366 " + this->_nickname + " #" + channel->get_name() + " :" + "End of /NAMES list.";
     this->receive_message(message3, this->_socket);
 }
 
@@ -606,30 +615,68 @@ void Client::join_message(Channel *channel)
 
 void Client::get_operator()
 {
+    std::string sp = " ope :";
     std::vector<Channel*>::iterator it = _operator_channels.begin();
     while(it != _operator_channels.end())
     {
-        std::cout << "    operator --> " << (*it)->get_name() << std::endl;
+        std::cout << sp << (*it)->get_name() << std::endl;
         it++;
     }
 }
 
 void Client::get_channel()
 {
+    std::string sp = "     :";
     std::vector<Channel*>::iterator it = _channels.begin();
     while(it != _channels.end())
     {
-        std::cout << "            --> " << (*it)->get_name() << std::endl;
+        std::cout << sp << (*it)->get_name() << std::endl;
         it++;
     }
 }
 
 void Client::get_invitation()
 {
+    std::string sp = " inv :";
     std::vector<Channel*>::iterator it = _channels.begin();
     while(it != _channels.end())
     {
-        std::cout << " invitation --> " << (*it)->get_name() << std::endl;
+        std::cout << sp << (*it)->get_name() << std::endl;
+        it++;
+    }
+}
+
+void Client::XX()
+{
+    std::string sp = "      ";
+    std::cout << std::endl;
+    std::cout << sp << this->get_nickname() << " / " << this->get_username() << std::endl;
+    std::cout << sp << " authentificated = " << this->get_autentification() << std::endl;
+    this->get_operator();
+    this->get_channel();
+    this->get_invitation();
+    std::cout << sp << "END" << std::endl;
+}
+
+void Client::XXX(std::vector<std::string> input, std::vector<Channel*>channels)
+{
+    std::string sp = "             ";
+    std::cout << std::endl;
+    std::vector<Channel*>::iterator it = channels.begin();
+    while(it != channels.end())
+    {
+        if ((*it)->get_name() == input[1])
+        {
+            std::cout << sp << (*it)->get_name() << std::endl;
+            std::cout << sp << "password   = " << (*it)->get_pass() << std::endl;
+            std::cout << sp << "limit      = " << (*it)->get_limit() << std::endl;
+            std::cout << sp << "invitation = " << (*it)->get_on_invit() << std::endl;
+            std::cout << sp << "rest topic = " << (*it)->get_restriction_topic() << std::endl;
+            std::cout << sp << "topic      = " << (*it)->get_topic() << std::endl;
+            (*it)->get_all_clients();
+            std::cout << sp << "END" << std::endl;
+            return ;
+        }
         it++;
     }
 }

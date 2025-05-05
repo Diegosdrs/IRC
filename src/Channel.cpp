@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/05 10:59:48 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/05 13:34:30 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -248,10 +248,17 @@ std::string Channel::join_message()
 
 void Channel::get_all_clients()
 {
+    std::string sp = "             ";
     std::vector<Client*>::iterator it = this->_clients.begin();
     while(it != _clients.end())
     {
-        std::cout << "                 " << (*it)->get_username() << std::endl;
+        std::cout << "    client = " << (*it)->get_nickname() << std::endl;
         it++;
+    }
+    std::vector<Client*>::iterator ite = this->_operator_clients.begin();
+    while(ite != _operator_clients.end())
+    {
+        std::cout << "       ope = " << (*it)->get_nickname() << std::endl;
+        ite++;
     }
 }

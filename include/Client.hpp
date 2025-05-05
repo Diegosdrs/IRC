@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:27:04 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/05 13:24:19 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,11 +44,7 @@ class Client
         std::string get_username();
         int get_socket();
         int is_operator(std::string channel_name);
-        
-        //DEBUG
-        void get_operator();
-        void get_channel();
-        void get_invitation();
+        bool get_autentification();
 
         // Gestion des channels
         int join_channel(std::vector<std::string> input, std::vector<Channel*> &channels);
@@ -72,6 +68,14 @@ class Client
         void add_channel_invited(Channel *channel);
         void send_message(std::string message, std::vector<Client*> clients, std::vector<Channel*>channels);
         void join_message(Channel *channel);
+
+        //DEBUG
+        void get_operator();
+        void get_channel();
+        void get_invitation();
+        void XX();
+        void XXX(std::vector<std::string> input, std::vector<Channel*>channels);
+
 
     private:
         int _socket;
