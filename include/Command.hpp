@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:26:09 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 14:55:01 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/05 11:41:50 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,11 @@ class Command
         ~Command();
 
         // COMMANDES
-        int kick(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int kick(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client);
         int send_message(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client);
-        int invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
-        int topic(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
-        int mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels);
+        int invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client);
+        int topic(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client);
+        int mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client);
 
         
         // Fonctions utiles
@@ -43,8 +43,8 @@ class Command
         int verif_channel(std::string channel_to_verif, std::vector<Channel*> channels);
         int is_number(std::string nbr);
         int is_valid_password(std::string pass);
-        int is_valid_client(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel);
-        int is_valid_client_2(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel);
+        std::string is_valid_client(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel);
+        std::string is_valid_client_2(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel);
 
     private:
 };

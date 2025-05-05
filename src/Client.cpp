@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/04/30 15:06:34 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/05 11:01:50 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -396,38 +396,7 @@ int Client::kick(std::vector<std::string> input, std::vector<Client*> clients, s
     channel_name.erase(0,1);
     if (this->_command->verif_channel(channel_name, channels) == 1)
     {
-        std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
-        return (1);
-    }
-    std::vector<Channel*>::iterator it = channels.begin();
-    while (it != channels.end())
-    {
-        if (channel_name == (*it)->get_name())
-        {
-            if ((*it)->get_operator_bool() == false)
-            {
-                std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
-                return (1);
-            }
-        }
-        it++;
-    }
-    if (this->_is_operator == false || this->is_operator(channel_name) == 1)
-    {
-        std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
-        return (381);
-    }
-    int res = this->_command->kick(input, clients, channels);
-    return (res);
-}
-
-int Client::invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
-{
-    std::string channel_name = input[2];
-    channel_name.erase(0,1);
-    if (this->_command->verif_channel(channel_name, channels) == 1)
-    {
-        std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
+        //std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
         return (403);
     }
     std::vector<Channel*>::iterator it = channels.begin();
@@ -437,18 +406,49 @@ int Client::invite(std::vector<std::string> input, std::vector<Client*> clients,
         {
             if ((*it)->get_operator_bool() == false)
             {
-                std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
-                return (1);
+                //std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
+                return (482);
+            }
+        }
+        it++;
+    }
+    if (this->_is_operator == false || this->is_operator(channel_name) == 1)
+    {
+        //std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
+        return (482);
+    }
+    int res = this->_command->kick(input, clients, channels, this);
+    return (res);
+}
+
+int Client::invite(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
+{
+    std::string channel_name = input[2];
+    channel_name.erase(0,1);
+    if (this->_command->verif_channel(channel_name, channels) == 1)
+    {
+        //std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
+        return (403);
+    }
+    std::vector<Channel*>::iterator it = channels.begin();
+    while (it != channels.end())
+    {
+        if (channel_name == (*it)->get_name())
+        {
+            if ((*it)->get_operator_bool() == false)
+            {
+                //std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
+                return (482);
             }
         }
         it++;
     }
     if ((this->_is_operator == false || this->is_operator(channel_name) == 1) && (*it)->get_restriction_topic() == true)
     {
-        std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
-        return (442);
+        //std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
+        return (482);
     }
-    int res = this->_command->topic(input, clients, channels);
+    int res = this->_command->invite(input, clients, channels, this);
     return (res);
 }
 
@@ -458,8 +458,8 @@ int Client::topic(std::vector<std::string> input, std::vector<Client*> clients, 
     channel_name.erase(0,1);
     if (this->_command->verif_channel(channel_name, channels) == 1)
     {
-        std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
-        return (1);
+        //std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
+        return (403);
     }
     std::vector<Channel*>::iterator it = channels.begin();
     while (it != channels.end())
@@ -468,18 +468,18 @@ int Client::topic(std::vector<std::string> input, std::vector<Client*> clients, 
         {
             if ((*it)->get_operator_bool() == false && (*it)->get_restriction_topic() == true)
             {
-                std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
-                return (1);
+                //std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
+                return (482);
             }
         }
         it++;
     }
     if (this->_is_operator == false || this->is_operator(channel_name) == 1)
     {
-        std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
-        return (381);
+        //std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
+        return (482);
     }
-    int res = this->_command->invite(input, clients, channels);
+    int res = this->_command->topic(input, clients, channels, this);
     return (res);
 }
 
@@ -489,8 +489,8 @@ int Client::mode(std::vector<std::string> input, std::vector<Client*> clients, s
     channel_name.erase(0,1);
     if (this->_command->verif_channel(channel_name, channels) == 1)
     {
-        std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
-        return (1);
+        //std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
+        return (403);
     }
     std::vector<Channel*>::iterator it = channels.begin();
     while (it != channels.end())
@@ -499,18 +499,18 @@ int Client::mode(std::vector<std::string> input, std::vector<Client*> clients, s
         {
             if ((*it)->get_operator_bool() == false)
             {
-                std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
-                return (1);
+                //std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
+                return (482);
             }
         }
         it++;
     }
     if (this->_is_operator == false || this->is_operator(channel_name) == 1)
     {
-        std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
-        return (381);
+        //std::cerr << "You are not the operator of " << channel_name << " channel" << std::endl;
+        return (482);
     }
-    int res = this->_command->mode(input, clients, channels);
+    int res = this->_command->mode(input, clients, channels, this);
     return (res);
 }
 
