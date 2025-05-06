@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/05 13:03:22 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/06 09:35:31 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
 {
     if (this->verif_client(input[2], clients) == 1)
     {
-        std::cout << "This client doesn't exist" << std::endl;
+        //std::cout << "This client doesn't exist" << std::endl;
         return (401);
     }
     std::vector<Channel*>::iterator it = channels.begin();
@@ -61,7 +61,7 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
         }
         it++;
     }
-    return (1); 
+    return (0);
 }
 
 
@@ -83,7 +83,7 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
             }
             it++;
         }
-        return (1);
+        return (0);
     }
     else if (this->verif_client(input[1], clients) == 0)
     {
@@ -95,12 +95,11 @@ int Command::send_message(std::vector<std::string> input, std::vector<Client*> c
                 std::string message;
                 message = ":" + client->get_nickname() + " PRIVMSG " + input[1] + " :" + input[2];
                 (*it)->receive_message(message, (*it)->get_socket());
-                return (0); 
+                return (0);
             }
             it++;
         }
     }
-    //std::cerr << "The client " << input[1] << " doesn't exist" << std::endl;
     return (401);
 }
 
@@ -140,13 +139,9 @@ int Command::invite(std::vector<std::string> input, std::vector<Client*> clients
         {
             if((*ite)->is_in_channel(channel_name) == false)
             {
-                // std::string message_begin = "You have been invited on ";
-                // std::string message_end = " channel";
-                // std::string message = message_begin + input[2] + message_end;
-                //(*ite)->receive_message(message);
                 (*ite)->add_channel_invited(*it);
                 std::string message;
-                message = ":IRC 341 " + client->get_nickname() + " " + (*ite)->get_nickname() + " #" + channel_name; 
+                message = ":IRC 341 " + client->get_nickname() + " " + (*ite)->get_nickname() + " #" + channel_name;
                 client->receive_message(message, client->get_socket());
                 std::string message2;
                 message = ":" + client->get_nickname() + "!~" + client->get_username() + "@localhost INVITE " + (*ite)->get_nickname() + " :#" + channel_name;
@@ -177,18 +172,20 @@ int Command::topic(std::vector<std::string> input, std::vector<Client*> clients,
                 {
                     //std::cout << "The topic is " << (*it)->get_topic() << std::endl;
                     std::string message;
-                    message = ":IRC 332 " + client->get_nickname() + " " + input[1] + " :" + (*it)->get_topic(); 
+                    message = ":IRC 332 " + client->get_nickname() + " " + input[1] + " :" + (*it)->get_topic();
                     client->receive_message(message, client->get_socket());
                     return (0); // 332
                 }
                 //std::cerr << "This channel doesn't have topic yet" << std::endl;
-                std::string message;
-                message = ";IRC 332 " + client->get_nickname() + " " + input[1] + " :No topic is set"; 
-                client->receive_message(message, client->get_socket());
+                //std::string message;
+                //message = ":IRC 332 " + client->get_nickname() + " " + input[1] + " :No topic is set";
+                //client->receive_message(message, client->get_socket());
                 return (331);
             }
             else
             {
+				if (input[2].empty())
+					return 412;
                 (*it)->set_topic(input[2]);
                 //std::string message = "The topic of " + channel_name + " is " + input[2];
                 std::string message;
@@ -208,14 +205,14 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     std::string channel_name = input[1];
     channel_name.erase(0,1);
     std::vector<Channel*>::iterator it = channels.begin();
-    
+
     if (input.size() >= 2)
         input.erase(input.begin(), input.begin() + 2);
-    
+
     if (input[0][0] != '+' && input[0][0] != '-')
     {
-        std::cerr << "Error : bad arguments" << std::endl;
-        return (1);
+        //std::cerr << "Error : bad arguments" << std::endl;
+        return (461);
     }
     while (it != channels.end())
     {
@@ -225,7 +222,9 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
         }
         it++;
     }
-    
+	if (verif_mode_char(input) == 1)
+		return 501;
+
     // KOL --> arguments
     // IT  --> sans arguments
     size_t i = 0;
@@ -258,7 +257,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (I < 0)
                         I--;
                     else
-                        I++;                      
+                        I++;
                     I *= -1;
                 }
                 if (input[i][j] == 't')
@@ -268,7 +267,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (T < 0)
                         T--;
                     else
-                        T++; 
+                        T++;
                     T *= -1;
                 }
                 if (input[i][j] == 'k')
@@ -300,7 +299,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (K < 0)
                         K--;
                     else
-                        K++; 
+                        K++;
                     K *= -1;
                 }
                 if (input[i][j] == 'o')
@@ -325,7 +324,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (O < 0)
                         O--;
                     else
-                        O++; 
+                        O++;
                     O *= -1;
                 }
                 if (input[i][j] == 'l')
@@ -352,9 +351,11 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (L < 0)
                         L--;
                     else
-                        L++; 
+                        L++;
                     L *= -1;
                 }
+				else
+					return 501;
                 j++;
             }
             j = 0;
@@ -370,7 +371,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (I < 0)
                         I--;
                     else
-                        I++; 
+                        I++;
                     I *= -1;
                 }
                 if (input[i][j] == 't')
@@ -380,7 +381,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (T < 0)
                         T--;
                     else
-                        T++; 
+                        T++;
                     T *= -1;
                 }
                 if (input[i][j] == 'k')
@@ -390,7 +391,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (K < 0)
                         K--;
                     else
-                        K++; 
+                        K++;
                     K *= -1;
                 }
                 if (input[i][j] == 'o')
@@ -415,7 +416,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (O < 0)
                         O--;
                     else
-                        O++; 
+                        O++;
                     O *= -1;
                 }
                 if (input[i][j] == 'l')
@@ -425,9 +426,11 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     if (L < 0)
                         L--;
                     else
-                        L++; 
+                        L++;
                     L *= -1;
                 }
+				else
+					return 501;
                 j++;
             }
             j = 0;
@@ -599,7 +602,7 @@ std::string Command::is_valid_client(std::vector<std::string> input, int index, 
                 res = res + input[i];
                 if (i + 1 != i < input.size())
                     res = res + " ";
-                break ; 
+                break ;
             }
             it++;
         }
@@ -639,11 +642,33 @@ std::string Command::is_valid_client_2(std::vector<std::string> input, int index
                 res = res + input[i];
                 if (i + 1 != i < input.size())
                     res = res + " ";
-                break ; 
+                break ;
             }
             it++;
         }
         i++;
     }
     return (res);
+}
+
+int Command::verif_mode_char(std::vector<std::string> input)
+{
+	size_t i = 0;
+	size_t j = 0;
+	while(i < input.size())
+	{
+		if (input[i][0] == '-' || input[i][0] == '+')
+		{
+            j = 1;
+			while (j < input[i].size())
+			{
+				if (input[i][j] != 'k' && input[i][j] != 'o'
+						&& input[i][j] != 'l' && input[i][j] != 'i' && input[i][j] != 't')
+					return 1;
+				j++;
+			}
+		}
+		i++;
+	}
+	return 0;
 }
