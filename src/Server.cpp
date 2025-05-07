@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
+/*   By: artberna <artberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:35:44 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/06 11:15:39 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/06 14:35:45 by artberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,17 @@ bool Server::isValidUsername(std::string user){
 	return true;
 }
 
+bool Server::isNotTakenChannel(std::string chan){
+	std::vector<Channel*>::iterator it = _channels.begin();
+	std::vector<Channel*>::iterator ite = _channels.end();
+
+	for (; it != ite; it++){
+		if (chan == (*it)->get_name())
+			return false;
+	}
+	return true;
+}
+
 void  Server::initErrorCodes(){
 	_errorCodes["331"] = "No topic is set";
 	_errorCodes["401"] = "No such nick/channel";
@@ -112,6 +123,7 @@ void  Server::initErrorCodes(){
 	_errorCodes["431"] = "No nickname given";
 	_errorCodes["432"] = "Erroneous nickname";
 	_errorCodes["433"] = "Nickname is already in use";
+	_errorCodes["434"] = "Channelname is already in use";
 	_errorCodes["441"] = "They aren't on that channel";
 	_errorCodes["442"] = "You're not on that channel";
 	_errorCodes["443"] = "Already on channel";
@@ -254,40 +266,31 @@ void Server::removeClient(size_t index){
 
 	std::vector<Client*>::iterator it = _clients.begin();
 	std::vector<Client*>::iterator ite = _clients.end();
-	std::vector<Channel*>_channel_to_delete;
 
-	for (; it != ite; it++)
-	{
-		if ((*it)->get_socket() == fd)
-		{
-			_channel_to_delete = (*it)->supp_channel();
+	for (; it != ite; it++) {
+		if ((*it)->get_socket() == fd){
+
+			std::vector<Channel*> channel_to_delete = (*it)->supp_channel();
+			if (!channel_to_delete.empty()){
+				for (std::vector<Channel*>::iterator del_it = channel_to_delete.begin(); del_it != channel_to_delete.end(); del_it++){
+					std::vector<Channel*>::iterator it2 = _channels.begin();
+					while (it2 != _channels.end()) {
+						if ((*it2)->get_name() == (*del_it)->get_name()){
+							delete *it2;
+							_channels.erase(it2);
+							break;
+						}
+						else
+						it2++;
+					}
+				}
+			}
 			delete *it;
-			removeChannel(_channel_to_delete);
 			_clients.erase(it);
 			break;
 		}
 	}
 	std::cout << "Client disconnected" << std::endl;
-}
-
-void Server::removeChannel(std::vector<Channel*>channel)
-{
-    if (channel.empty())
-        return;        
-		
-	if (!_channels.empty()) {
-		for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
-		{
-			for (std::vector<Channel*>::iterator ite = channel.begin(); ite != channel.end(); ite++)
-			{
-				if ((*it)->get_name() == (*ite)->get_name())
-				{
-					delete *it;
-					_channels.erase(it);
-				}
-			}
-		}
-	}
 }
 
 void Server::removeClientByFD(int client_fd){
@@ -320,11 +323,11 @@ void Server::cleanup(){
 		_fds.clear();
 	}
 
-	if (!_pendingTransfers.empty()) {
-		for (std::map<std::string, PendingTransfer>::iterator it = _pendingTransfers.begin(); it != _pendingTransfers.end(); it++)
-			_pendingTransfers.erase(it);
-		_pendingTransfers.clear();
-	}
+	// if (!_pendingTransfers.empty()) {
+	// 	for (std::map<std::string, PendingTransfer>::iterator it = _pendingTransfers.begin(); it != _pendingTransfers.end(); it++)
+	// 		_pendingTransfers.erase(it);
+	// 	_pendingTransfers.clear();
+	// }
 }
 
 void Server::handleClient(size_t index){
@@ -457,6 +460,39 @@ void Server::parseCommand(std::string msg, int client_fd){
 	// 	handleDecline(client_fd, params, client);
 	else
 		sendClientError(client_fd, "421", cmd);
+}
+
+void Server::handleCommandBotPriv(int client_fd, std::vector<std::string> params, Client* client){
+	std::string to_ret;
+	std::string cmd = params[2].substr(1);
+
+	if (cmd == "TIME"){
+		time_t now = time(0);
+		char* dt = ctime(&now);
+		to_ret = "Current time: " + std::string(dt);
+		if (!to_ret.empty() && to_ret[to_ret.length()-1] == '\n') {
+			to_ret.erase(to_ret.length()-1);
+		}
+	}
+	else if (cmd == "WEATHER")
+		to_ret = "Today's weather: 25°C, sunny.";
+	else if (cmd == "HELP")
+		to_ret = "Commands are : !HELP, !TIME & !WEATHER";
+	else if (cmd == "WHOAMI"){
+		if (!client->get_nickname().empty()) // remplacer par booleen has_nick
+			to_ret = "Your nick is: " + client->get_nickname();
+		if (!client->get_username().empty()) // remplacer par booleen has_user
+			to_ret += "\nYour user is: " + client->get_username();
+	}
+	else {
+		sendClientError(client_fd, "421", cmd + " :Use !HELP to see all the bot commands");
+		return;
+	}
+
+	std::string response = ":" + _server_name + "_bot PRIVMSG " + client->get_nickname() + " :" + to_ret + "\r\n";
+	ssize_t sent = send(client_fd, response.c_str(), response.size(), 0);
+	if (sent < 0)
+		throw std::runtime_error(std::string("send: ") + std::strerror(errno));
 }
 
 void Server::handleCommandBot(int client_fd, std::vector<std::string> params, Client* client){
@@ -832,7 +868,7 @@ void Server::handleInvite(int client_fd, std::vector<std::string> params, Client
 		return;
 	}
 
-	if (!isValidChannel(params[1])){
+	if (!isValidChannel(params[2])){
 		sendClientError(client_fd, "476", params[1]);
 		return;
 	}
@@ -897,6 +933,10 @@ void Server::handleJoin(int client_fd, std::vector<std::string> params, Client* 
 	if (res == 11){
 		std::string new_channel_name = params[1];
 		new_channel_name.erase(0,1);
+		if (!isNotTakenChannel(new_channel_name)){
+			sendClientError(client_fd, "434", params[0]);
+			return;
+		}
 		Channel* new_channel = new  Channel(new_channel_name, client);
 		client->set_operator(true);
 		client->add_channel_operator(new_channel);
@@ -924,6 +964,12 @@ void Server::handlePrivmsg(int client_fd, std::vector<std::string> params, Clien
 
 	if (params.size() != 3){
 		sendClientError(client_fd, "411", params[0]);
+		return;
+	}
+
+	if (params[2][0] == '!'){
+		std::transform(params[2].begin(), params[2].end(), params[2].begin(), ::toupper);
+		handleCommandBotPriv(client_fd, params, client);
 		return;
 	}
 
@@ -1038,11 +1084,3 @@ Server::~Server(){
 	std::cout << "Server closed" << std::endl;
 	cleanup();
 }
-
-
-/*******************************************************************/
-
-
-// demander qu est ce quune registration complete, et si apres quelle soit complete on peut encore faire les commandes pour se register ?
-// USERHOST cest quoi ?
-// check si cleanup avant throw || dans le catch || apres pour clean correctement apres un erreur

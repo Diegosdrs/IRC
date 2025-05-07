@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
+/*   By: artberna <artberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/06 10:32:59 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/06 13:29:36 by artberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Channel.hpp"
 #include "../include/Client.hpp"
 #include "../include/Command.hpp"
-#include <algorithm> 
+#include <algorithm>
 
 Channel::Channel(){};
 
@@ -32,13 +32,13 @@ Channel::Channel(std::string name, Client *opera)
 
 Channel::~Channel()
 {
-    std::vector<Client*>::iterator it = this->_clients.begin();
-    while (it != this->_clients.end())
-    {
-        if (*it)
-            (*it)->leave_channel_from_dest_channel(this);
-        it++;
-    }
+    // std::vector<Client*>::iterator it = this->_clients.begin();
+    // while (it != this->_clients.end())
+    // {
+    //     if (*it)
+    //         (*it)->leave_channel_from_dest_channel(this);
+    //     it++;
+    // }
     this->_operator_clients.clear();
     this->_clients.clear();
 }
@@ -173,7 +173,7 @@ void    Channel::remove_client(Client *client)
         if (*it == client)
         {
             _clients.erase(it);
-            //std::cout << "Client " << client->get_nickname() << " removed from channel " << this->_name << std::endl;
+            std::cout << "Client " << client->get_nickname() << " removed from channel " << this->_name << std::endl;
             return ;
         }
         it++;
@@ -258,7 +258,7 @@ void Channel::get_all_clients()
     std::vector<Client*>::iterator ite = this->_operator_clients.begin();
     while(ite != _operator_clients.end())
     {
-        std::cout << "       ope = " << (*it)->get_nickname() << std::endl;
+        std::cout << "       ope = " << (*ite)->get_nickname() << std::endl;
         ite++;
     }
 }

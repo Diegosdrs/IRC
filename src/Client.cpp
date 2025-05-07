@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/06 10:54:50 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/07 12:01:58 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,33 +26,44 @@ Client::Client(int socket)
     this->_username = "default";
     this->_realname = "default";
     this->_is_authenticated = false;
+    this-> _is_operator = false;
     this->_hasNick = false;
 	this->_hasPassword = false;
 	this->_hasUser = false;
     this->_command = new Command();
 }
 
-
 Client::~Client()
 {
     delete this->_command;
-    std::vector<Channel*>::iterator ite = this->_operator_channels.begin();
+}
+
+std::vector<Channel*> Client::supp_channel()
+{
+    std::vector<Channel*>_channel_to_delete;
+	std::vector<Channel*>::iterator ite = this->_operator_channels.begin();
     while (ite != this->_operator_channels.end())
     {
         if (*ite)
             (*ite)->set_operator(this);
         ite++;
     }
-    std::vector<Channel*>::iterator it = this->_channels.begin();
-    while (it != this->_channels.end())
+    std::vector<Channel*>::iterator it = _channels.begin();
+    while(it != _channels.end())
     {
-        if (*it)
-            (*it)->remove_client(this);
+		if (*it)
+		{
+			(*it)->remove_client(this);
+			if ((*it)->get_nbr_of_client() <= 0)
+				_channel_to_delete.push_back(*it);
+		}
         it++;
     }
+
     this->_invited_channels.clear();
     this->_channels.clear();
     this->_operator_channels.clear();
+    return _channel_to_delete;
 }
 
 
@@ -225,7 +236,7 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
                 }
                 (*it)->add_client(this);
                 this->_channels.push_back(*it);
-                if ((*it)->get_on_invit() == true)
+                if (this->get_invited_by(*it) == true)
                 {
                     std::vector<Channel*>::iterator invited_it = std::find(this->_invited_channels.begin(), this->_invited_channels.end(), *it);
                     if (invited_it != this->_invited_channels.end())
@@ -259,7 +270,7 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
                 }
                 (*it)->add_client(this);
                 this->_channels.push_back(*it);
-                if ((*it)->get_on_invit() == true)
+                if (this->get_invited_by(*it) == true)
                 {
                     std::vector<Channel*>::iterator invited_it = std::find(this->_invited_channels.begin(), this->_invited_channels.end(), *it);
                     if (invited_it != this->_invited_channels.end())
@@ -302,7 +313,7 @@ void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &c
         }
         ite++;
     }
-    std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
+    //std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
     return ;
 }
 
@@ -489,11 +500,16 @@ int Client::topic(std::vector<std::string> input, std::vector<Client*> clients, 
     {
         if (channel_name == (*it)->get_name())
         {
+            if ((*it)->get_client(this->_nickname) == NULL)
+            {
+                return (442);
+            }
             if ((*it)->get_operator_bool() == false && (*it)->get_restriction_topic() == true)
             {
                 //std::cerr << "Error: No operator in the channel. You cannot use operator commands." << std::endl;
                 return (482);
             }
+            break ;
         }
         it++;
     }
@@ -565,8 +581,8 @@ void    Client::add_channel_invited(Channel *channel)
 void    Client::receive_message(std::string const &message, int socket)
 {
     std::string full_message = message + "\r\n";
-    int bytes = send(socket, message.c_str(), message.length(), 0);
-    if (bytes > 0)
+    int bytes = send(socket, full_message.c_str(), full_message.length(), 0);
+    if (bytes < 0)
         throw std::runtime_error(std::string("send: ") + std::strerror(errno));
 }
 
@@ -624,18 +640,6 @@ void Client::join_message(Channel *channel)
     this->receive_message(message3, this->_socket);
 }
 
-std::vector<Channel*> Client::supp_channel()
-{
-    std::vector<Channel*>_channel_to_delete;
-    std::vector<Channel*>::iterator it = _channels.begin();
-    while(it != _channels.end())
-    {
-        if ((*it)->get_nbr_of_client() <= 1)
-            _channel_to_delete.push_back(*it);
-        it++;
-    }
-    return _channel_to_delete;
-}
 
 //----------------------------- DEBUG ------------------------------------
 
@@ -665,8 +669,8 @@ void Client::get_channel()
 void Client::get_invitation()
 {
     std::string sp = " inv :";
-    std::vector<Channel*>::iterator it = _channels.begin();
-    while(it != _channels.end())
+    std::vector<Channel*>::iterator it = _invited_channels.begin();
+    while(it != _invited_channels.end())
     {
         std::cout << sp << (*it)->get_name() << std::endl;
         it++;
@@ -707,3 +711,9 @@ void Client::XXX(std::vector<std::string> input, std::vector<Channel*>channels)
         it++;
     }
 }
+
+// valgrind ./irc <port> <pass>
+
+// sur un autre terminal
+// nc localhost <port>
+// pass nick/user etc dermerde toi tes un grand garcon ptit zizi

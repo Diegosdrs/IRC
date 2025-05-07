@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/06 09:35:31 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/07 14:24:50 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,6 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
             Client *test = (*it)->get_client(input[2]);
             if (test != NULL)
             {
-                test->leave_channel(channel_name, channels);
                 if (input.size() > 3)
                 {
                     //std::cout << input[2] << " is ejected from " << channel_name << " channel because " << input[3] << std::endl;
@@ -54,6 +53,7 @@ int Command::kick(std::vector<std::string> input, std::vector<Client*> clients, 
                     message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost KICK #" + channel_name + " " + test->get_username();
                     (*it)->send_message(message);
                 }
+				test->leave_channel(channel_name, channels);
                 return (0);
             }
             //std::cout << "This client is not in this channel" << std::endl;
@@ -144,7 +144,7 @@ int Command::invite(std::vector<std::string> input, std::vector<Client*> clients
                 message = ":IRC 341 " + client->get_nickname() + " " + (*ite)->get_nickname() + " #" + channel_name;
                 client->receive_message(message, client->get_socket());
                 std::string message2;
-                message = ":" + client->get_nickname() + "!~" + client->get_username() + "@localhost INVITE " + (*ite)->get_nickname() + " :#" + channel_name;
+                message2 = ":" + client->get_nickname() + "!~" + client->get_username() + "@localhost INVITE " + (*ite)->get_nickname() + " :#" + channel_name;
                 (*ite)->receive_message(message2, (*ite)->get_socket());
                 return (0);
             }
@@ -199,313 +199,522 @@ int Command::topic(std::vector<std::string> input, std::vector<Client*> clients,
     return (0);
 }
 
-int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client)
+int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*> channels, Client *client)
 {
+    // Ignorer clients (tel que dans le code original)
     (void)clients;
-    std::string channel_name = input[1];
-    channel_name.erase(0,1);
-    std::vector<Channel*>::iterator it = channels.begin();
-
-    if (input.size() >= 2)
-        input.erase(input.begin(), input.begin() + 2);
-
-    if (input[0][0] != '+' && input[0][0] != '-')
-    {
-        //std::cerr << "Error : bad arguments" << std::endl;
-        return (461);
+    
+    // Vérifier si nous avons assez d'arguments
+    if (input.size() < 2) {
+        return 461; // ERR_NEEDMOREPARAMS
     }
-    while (it != channels.end())
-    {
-        if (channel_name == (*it)->get_name())
-        {
+    
+    // Extraire le nom du canal et supprimer le '#' au début
+    std::string channel_name = input[1];
+    if (channel_name[0] == '#') {
+        channel_name.erase(0, 1);
+    }
+    
+    // Trouver le canal dans la liste
+    std::vector<Channel*>::iterator it = channels.begin();
+    while (it != channels.end()) {
+        if (channel_name == (*it)->get_name()) {
             break;
         }
         it++;
     }
-	if (verif_mode_char(input) == 1)
-		return 501;
-
-    // KOL --> arguments
-    // IT  --> sans arguments
+    
+    // Si on a atteint la fin, le canal n'existe pas
+    if (it == channels.end()) {
+        return 403; // ERR_NOSUCHCHANNEL
+    }
+    
+    // Supprimer les deux premiers éléments (commande et nom du canal)
+    if (input.size() >= 2) {
+        input.erase(input.begin(), input.begin() + 2);
+    }
+    
+    // Vérifier s'il y a des arguments de mode
+    if (input.empty()) {
+        // Si pas d'arguments, on pourrait afficher les modes actuels (non implémenté ici)
+        return 0;
+    }
+    
+    // Vérifier que les arguments commencent par + ou -
+    if (input[0][0] != '+' && input[0][0] != '-') {
+        return 461; // ERR_NEEDMOREPARAMS
+    }
+    
+    // Vérifier les caractères de mode valides
+    if (verif_mode_char(input) == 1) {
+        return 501; // ERR_UMODEUNKNOWNFLAG
+    }
+    
+    // Structure pour suivre l'état des modes
+    struct ModeState {
+        bool set;           // true si mode à définir, false si à retirer
+        bool processed;     // indique si le mode a été traité
+        int index;          // index utilisé pour les modes avec paramètres
+        std::string param;  // paramètre associé au mode
+    };
+    
+    // Initialiser l'état des modes
+    ModeState iMode = {false, false, 0, ""};  // Mode invitation
+    ModeState tMode = {false, false, 0, ""};  // Mode restriction topic
+    ModeState kMode = {false, false, 0, ""};  // Mode mot de passe
+    ModeState oMode = {false, false, 0, ""};  // Mode opérateur
+    ModeState lMode = {false, false, 0, ""};  // Mode limite
+    
+    // Parcourir les arguments pour déterminer les modes à modifier
     size_t i = 0;
-    size_t j = 0;
-    int I = 0;
-    int T = 0;
-    int K = 0;
-    int O = 0;
-    int L = 0;
-    int I_int = 0;
-    int T_int = 0;
-    int K_int = 0;
-    int O_int = 0;
-    int L_int = 0;
-    int limit_res = 0;
-    std::string password;
-    std::string std_limit_res;
-    std::string res;
-    std::string res2;
-    while(i < input.size())
-    {
-        if (input[i][j] == '+')
-        {
-            while(j < input[i].size())
-            {
-                if (input[i][j] == 'i')
-                {
-                    if (I_int == 0)
-                        I_int = 1;
-                    if (I < 0)
-                        I--;
-                    else
-                        I++;
-                    I *= -1;
-                }
-                if (input[i][j] == 't')
-                {
-                    if (T_int == 0)
-                        T_int = 1;
-                    if (T < 0)
-                        T--;
-                    else
-                        T++;
-                    T *= -1;
-                }
-                if (input[i][j] == 'k')
-                {
-                    if (K_int == 0)
-                        K_int = 1;
-                    if (i + 1 >= input.size())
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
+    while (i < input.size()) {
+        bool isSet = (input[i][0] == '+');
+        
+        // Parcourir chaque caractère de mode dans l'argument
+        for (size_t j = 1; j < input[i].size(); j++) {
+            char mode = input[i][j];
+            
+            switch (mode) {
+                case 'i':
+                    iMode.set = isSet;
+                    iMode.processed = true;
+                    break;
+                    
+                case 't':
+                    tMode.set = isSet;
+                    tMode.processed = true;
+                    break;
+                    
+                case 'k':
+                    kMode.set = isSet;
+                    kMode.processed = true;
+                    kMode.index = i;
+                    
+                    // Vérifier si un paramètre est nécessaire et disponible pour +k
+                    if (isSet) {
+                        if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
+                            return 461; // ERR_NEEDMOREPARAMS
+                        }
+                        
+                        // Valider le mot de passe
+                        if (is_valid_password(input[i + 1]) == 1) {
+                            return 472; // ERR_PASSWDMISMATCH
+                        }
+                        
+                        kMode.param = input[i + 1];
                     }
-                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
+                    break;
+                    
+                case 'o':
+                    oMode.set = isSet;
+                    oMode.processed = true;
+                    oMode.index = i;
+                    
+                    // Vérifier si un paramètre est disponible
+                    if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
+                        return 461; // ERR_NEEDMOREPARAMS
                     }
-                    // if (!(*it)->get_pass().empty())
-                    // {
-                    //     std::cerr << "Error : this channel has already a password" << std::endl;
-                    //     return (1);
-                    // }
-                    if (is_valid_password(input[i + 1]) == 1)
-                    {
-                        //std::cerr << "Error : incorrect password definition" << std::endl;
-                        return (472);
+                    
+                    // Valider le client selon le mode (+o ou -o)
+                    if (isSet) {
+                        oMode.param = is_valid_client(input, i + 1, clients, *it);
+                    } else {
+                        oMode.param = is_valid_client_2(input, i + 1, clients, *it);
                     }
-                    password = input[i + 1];
-                    (*it)->set_pass(input[i + 1]);
-                    if (K < 0)
-                        K--;
-                    else
-                        K++;
-                    K *= -1;
-                }
-                if (input[i][j] == 'o')
-                {
-                    if (O_int == 0)
-                        O_int = 1;
-                    if (i + 1 >= input.size())
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
+                    if (oMode.param == "442")
+                        return 442;
+                    if (oMode.param == "462")
+                        return 462;
+                    if (oMode.param == "NULL") {
+                        return 461; // ERR_NEEDMOREPARAMS
                     }
-                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
+                    break;
+                    
+                case 'l':
+                    lMode.set = isSet;
+                    lMode.processed = true;
+                    lMode.index = i;
+                    
+                    // Vérifier si un paramètre est nécessaire et disponible pour +l
+                    if (isSet) {
+                        if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
+                            return 461; // ERR_NEEDMOREPARAMS
+                        }
+                        
+                        // Valider la limite
+                        int limit = is_number(input[i + 1]);
+                        if (limit == 0) {
+                            return 461; // ERR_NEEDMOREPARAMS
+                        }
+                        
+                        lMode.param = input[i + 1];
                     }
-                    res = is_valid_client(input, i + 1, clients, *it);
-                    if (res == "442")
-                        return (442);
-                    if (res == "NULL")
-                        return (461);
-                    if (O < 0)
-                        O--;
-                    else
-                        O++;
-                    O *= -1;
-                }
-                if (input[i][j] == 'l')
-                {
-                    if (L_int == 0)
-                        L_int = 1;
-                    if (i + 1 >= input.size())
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
-                    }
-                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
-                    }
-                    limit_res = is_number(input[i + 1]);
-                    if (limit_res == 0)
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
-                    }
-                    std_limit_res = input[i + 1];
-                    if (L < 0)
-                        L--;
-                    else
-                        L++;
-                    L *= -1;
-                }
-				else
-					return 501;
-                j++;
+                    break;
             }
-            j = 0;
-        }
-        if (input[i][j] == '-')
-        {
-            while(j < input[i].size())
-            {
-                if (input[i][j] == 'i')
-                {
-                    if (I_int == 0)
-                        I_int = 2;
-                    if (I < 0)
-                        I--;
-                    else
-                        I++;
-                    I *= -1;
-                }
-                if (input[i][j] == 't')
-                {
-                    if (T_int == 0)
-                        T = 2;
-                    if (T < 0)
-                        T--;
-                    else
-                        T++;
-                    T *= -1;
-                }
-                if (input[i][j] == 'k')
-                {
-                    if (K_int == 0)
-                        K_int = 2;
-                    if (K < 0)
-                        K--;
-                    else
-                        K++;
-                    K *= -1;
-                }
-                if (input[i][j] == 'o')
-                {
-                    if (O_int == 0)
-                        O_int = 2;
-                    if (i + 1 >= input.size())
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
-                    }
-                    if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
-                    {
-                        //std::cerr << "Error : bad arguments" << std::endl;
-                        return (461);
-                    }
-                    res2 = is_valid_client_2(input, i + 1, clients, *it);
-                    if (res == "442")
-                        return (442);
-                    if (res == "NULL")
-                        return (461);
-                    if (O < 0)
-                        O--;
-                    else
-                        O++;
-                    O *= -1;
-                }
-                if (input[i][j] == 'l')
-                {
-                    if (L_int == 0)
-                        L_int = 2;
-                    if (L < 0)
-                        L--;
-                    else
-                        L++;
-                    L *= -1;
-                }
-				else
-					return 501;
-                j++;
-            }
-            j = 0;
         }
         i++;
     }
-    if (I < 0 && I_int == 1)
-    {
-        (*it)->set_on_invit(true);
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +i";
+    
+    // Appliquer les changements de mode et envoyer les messages
+    if (iMode.processed) {
+        (*it)->set_on_invit(iMode.set);
+        std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+                             "@localhost MODE #" + channel_name + (iMode.set ? " +i" : " -i");
         (*it)->send_message(message);
     }
-    if (I > 0 && I_int == 2)
-    {
-        (*it)->set_on_invit(false);
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -i";
+    
+    if (tMode.processed) {
+        (*it)->set_restriction_topic(tMode.set);
+        std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+                             "@localhost MODE #" + channel_name + (tMode.set ? " +t" : " -t");
         (*it)->send_message(message);
     }
-    if (T < 0 && T_int == 1)
-    {
-        (*it)->set_restriction_topic(true);
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +t";
+    
+    if (kMode.processed) {
+        if (kMode.set) {
+            (*it)->set_pass(kMode.param);
+            std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+                                "@localhost MODE #" + channel_name + " +k " + kMode.param;
+            (*it)->send_message(message);
+        } else {
+            (*it)->set_pass("");
+            std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+                                "@localhost MODE #" + channel_name + " -k";
+            (*it)->send_message(message);
+        }
+    }
+    
+    if (lMode.processed) {
+        if (lMode.set) {
+            int limit = is_number(lMode.param);
+            (*it)->set_limit(limit);
+            std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+                                "@localhost MODE #" + channel_name + " +l " + lMode.param;
+            (*it)->send_message(message);
+        } else {
+            (*it)->set_limit(-1);
+            std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+                                "@localhost MODE #" + channel_name + " -l";
+            (*it)->send_message(message);
+        }
+    }
+    
+    A VERIFIER !
+    if (oMode.processed) {
+        std::string message = ":" + client->get_nickname() + " MODE #" + channel_name + 
+                            (oMode.set ? " +o " : " -o ") + oMode.param;
         (*it)->send_message(message);
     }
-    if (T > 0 && T_int == 2)
-    {
-        (*it)->set_restriction_topic(false);
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -t";
-        (*it)->send_message(message);
-    }
-    if (K < 0 && K_int == 1)
-    {
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +k " + password;
-        (*it)->send_message(message);
-    }
-    if (K > 0 && K_int == 2)
-    {
-        (*it)->set_pass("");
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -k";
-        (*it)->send_message(message);
-    }
-    if (L < 0 && L_int == 1)
-    {
-        (*it)->set_limit(limit_res);
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +l " + std_limit_res;
-        (*it)->send_message(message);
-    }
-    if (L > 0 && L_int == 2)
-    {
-        (*it)->set_limit(-1);
-        std::string message;
-        message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -l ";
-        (*it)->send_message(message);
-    }
-    if (O < 0 && O_int == 1)
-    {
-        std::string message;
-        message = ":" + client->get_nickname() + " MODE #" + channel_name + " +o " + res;
-        (*it)->send_message(message);
-    }
-    if (O > 0 && O_int == 2)
-    {
-        std::string message;
-        message = ":" + client->get_nickname() + " MODE #" + channel_name + " -o " + res2;
-        (*it)->send_message(message);
-    }
-    return (0);
+    
+    return 0;
 }
+
+
+// int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client)
+// {
+//     (void)clients;
+//     std::string channel_name = input[1];
+//     channel_name.erase(0,1);
+//     std::vector<Channel*>::iterator it = channels.begin();
+
+//     if (input.size() >= 2)
+//         input.erase(input.begin(), input.begin() + 2);
+
+//     if (input[0][0] != '+' && input[0][0] != '-')
+//     {
+//         //std::cerr << "Error : bad arguments" << std::endl;
+//         return (461);
+//     }
+//     while (it != channels.end())
+//     {
+//         if (channel_name == (*it)->get_name())
+//         {
+//             break;
+//         }
+//         it++;
+//     }
+// 	if (verif_mode_char(input) == 1)
+// 		return 501;
+
+//     // KOL --> arguments
+//     // IT  --> sans arguments
+//     size_t i = 0;
+//     size_t j = 1;
+//     int I = 0;
+//     int T = 0;
+//     int K = 0;
+//     int O = 0;
+//     int L = 0;
+//     int I_int = 0;
+//     int T_int = 0;
+//     int K_int = 0;
+//     int O_int = 0;
+//     int L_int = 0;
+//     int limit_res = 0;
+//     std::string password;
+//     std::string std_limit_res;
+//     std::string res;
+//     std::string res2;
+    
+//     while(i < input.size())
+//     {
+//         if (input[i][0] == '+')
+//         {
+//             while(j - 1 < input[i].size())
+//             {
+//                 if (input[i][j] == 'i')
+//                 {
+//                     if (I_int == 0)
+//                         I_int = 1;
+//                     if (I < 0)
+//                         I--;
+//                     else
+//                         I++;
+//                     I *= -1;
+//                 }
+//                 if (input[i][j] == 't')
+//                 {
+//                     if (T_int == 0)
+//                         T_int = 1;
+//                     if (T < 0)
+//                         T--;
+//                     else
+//                         T++;
+//                     T *= -1;
+//                 }
+//                 if (input[i][j] == 'k')
+//                 {
+//                     if (K_int == 0)
+//                         K_int = 1;
+//                     if (i + 1 >= input.size())
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     // if (!(*it)->get_pass().empty())
+//                     // {
+//                     //     std::cerr << "Error : this channel has already a password" << std::endl;
+//                     //     return (1);
+//                     // }
+//                     if (is_valid_password(input[i + 1]) == 1)
+//                     {
+//                         //std::cerr << "Error : incorrect password definition" << std::endl;
+//                         return (472);
+//                     }
+//                     password = input[i + 1];
+//                     (*it)->set_pass(input[i + 1]);
+//                     if (K < 0)
+//                         K--;
+//                     else
+//                         K++;
+//                     K *= -1;
+//                 }
+//                 if (input[i][j] == 'o')
+//                 {
+//                     if (O_int == 0)
+//                         O_int = 1;
+//                     if (i + 1 >= input.size())
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     res = is_valid_client(input, i + 1, clients, *it);
+//                     if (res == "442")
+//                         return (442);
+//                     if (res == "NULL")
+//                         return (461);
+//                     if (O < 0)
+//                         O--;
+//                     else
+//                         O++;
+//                     O *= -1;
+//                 }
+//                 if (input[i][j] == 'l')
+//                 {
+//                     if (L_int == 0)
+//                         L_int = 1;
+//                     if (i + 1 >= input.size())
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     limit_res = is_number(input[i + 1]);
+//                     if (limit_res == 0)
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     std_limit_res = input[i + 1];
+//                     if (L < 0)
+//                         L--;
+//                     else
+//                         L++;
+//                     L *= -1;
+//                 }
+//                 j++;
+//             }
+//             j = 1;
+//         }
+//         if (input[i][0] == '-')
+//         {
+//             while(j - 1 < input[i].size())
+//             {
+//                 if (input[i][j] == 'i')
+//                 {
+//                     if (I_int == 0)
+//                         I_int = 2;
+//                     if (I < 0)
+//                         I--;
+//                     else
+//                         I++;
+//                     I *= -1;
+//                 }
+//                 if (input[i][j] == 't')
+//                 {
+//                     if (T_int == 0)
+//                         T = 2;
+//                     if (T < 0)
+//                         T--;
+//                     else
+//                         T++;
+//                     T *= -1;
+//                 }
+//                 if (input[i][j] == 'k')
+//                 {
+//                     if (K_int == 0)
+//                         K_int = 2;
+//                     if (K < 0)
+//                         K--;
+//                     else
+//                         K++;
+//                     K *= -1;
+//                 }
+//                 if (input[i][j] == 'o')
+//                 {
+//                     if (O_int == 0)
+//                         O_int = 2;
+//                     if (i + 1 >= input.size())
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     if (input[i + 1][j] == '+' || input[i + 1][j] == '-')
+//                     {
+//                         //std::cerr << "Error : bad arguments" << std::endl;
+//                         return (461);
+//                     }
+//                     res2 = is_valid_client_2(input, i + 1, clients, *it);
+//                     if (res == "442")
+//                         return (442);
+//                     if (res == "NULL")
+//                         return (461);
+//                     if (O < 0)
+//                         O--;
+//                     else
+//                         O++;
+//                     O *= -1;
+//                 }
+//                 if (input[i][j] == 'l')
+//                 {
+//                     if (L_int == 0)
+//                         L_int = 2;
+//                     if (L < 0)
+//                         L--;
+//                     else
+//                         L++;
+//                     L *= -1;
+//                 }
+//                 j++;
+//             }
+//             j = 1;
+//         }
+//         i++;
+//     }
+    
+//     if (I < 0 && I_int == 1)
+//     {
+//         (*it)->set_on_invit(true);
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +i";
+//         (*it)->send_message(message);
+//     }
+//     if (I > 0 && I_int == 2)
+//     {
+//         (*it)->set_on_invit(false);
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -i";
+//         (*it)->send_message(message);
+//     }
+//     if (T < 0 && T_int == 1)
+//     {
+//         (*it)->set_restriction_topic(true);
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +t";
+//         (*it)->send_message(message);
+//     }
+//     if (T > 0 && T_int == 2)
+//     {
+//         (*it)->set_restriction_topic(false);
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -t";
+//         (*it)->send_message(message);
+//     }
+//     if (K < 0 && K_int == 1)
+//     {
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +k " + password;
+//         (*it)->send_message(message);
+//     }
+//     if (K > 0 && K_int == 2)
+//     {
+//         (*it)->set_pass("");
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -k";
+//         (*it)->send_message(message);
+//     }
+//     if (L < 0 && L_int == 1)
+//     {
+//         (*it)->set_limit(limit_res);
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " +l " + std_limit_res;
+//         (*it)->send_message(message);
+//     }
+//     if (L > 0 && L_int == 2)
+//     {
+//         (*it)->set_limit(-1);
+//         std::string message;
+//         message = ":" + client->get_nickname() + "!" + client->get_username() + "@localhost MODE #" + channel_name + " -l ";
+//         (*it)->send_message(message);
+//     }
+//     if (O < 0 && O_int == 1)
+//     {
+//         std::string message;
+//         message = ":" + client->get_nickname() + " MODE #" + channel_name + " +o " + res;
+//         (*it)->send_message(message);
+//     }
+//     if (O > 0 && O_int == 2)
+//     {
+//         std::string message;
+//         message = ":" + client->get_nickname() + " MODE #" + channel_name + " -o " + res2;
+//         (*it)->send_message(message);
+//     }
+//     return (0);
+// }
 
 
 //----------------------------- FONCTIONS UTILES ------------------------------------
@@ -590,7 +799,7 @@ std::string Command::is_valid_client(std::vector<std::string> input, int index, 
         std::vector<Client*>::iterator it = clients.begin();
         while(it != clients.end())
         {
-            if ((*it)->get_nickname() == client_to_verif || (*it)->get_username() == client_to_verif)
+            if ((*it)->get_nickname() == client_to_verif)
             {
                 if (channel->get_operator(*it) != NULL)
                 {
@@ -630,7 +839,7 @@ std::string Command::is_valid_client_2(std::vector<std::string> input, int index
         std::vector<Client*>::iterator it = clients.begin();
         while(it != clients.end())
         {
-            if ((*it)->get_nickname() == client_to_verif || (*it)->get_username() == client_to_verif)
+            if ((*it)->get_nickname() == client_to_verif)
             {
                 if (channel->get_operator(*it) == NULL)
                 {
@@ -653,22 +862,30 @@ std::string Command::is_valid_client_2(std::vector<std::string> input, int index
 
 int Command::verif_mode_char(std::vector<std::string> input)
 {
-	size_t i = 0;
-	size_t j = 0;
-	while(i < input.size())
-	{
-		if (input[i][0] == '-' || input[i][0] == '+')
-		{
-            j = 1;
-			while (j < input[i].size())
-			{
-				if (input[i][j] != 'k' && input[i][j] != 'o'
-						&& input[i][j] != 'l' && input[i][j] != 'i' && input[i][j] != 't')
-					return 1;
-				j++;
-			}
-		}
-		i++;
-	}
-	return 0;
+    for (size_t i = 0; i < input.size(); i++)
+    {
+        // Vérifier si la chaîne est vide
+        if (input[i].empty())
+            return 1;
+            
+        // Vérifier si la chaîne commence par '+' ou '-'
+        if (input[i][0] == '+' || input[i][0] == '-')
+        {
+            // Si la chaîne n'a que le caractère '+' ou '-' sans autres caractères, c'est invalide
+            if (input[i].size() == 1)
+                return 1;
+                
+            // Vérifier chaque caractère après le premier
+            for (size_t j = 1; j < input[i].size(); j++)
+            {
+                // Si le caractère n'est pas l'un des modes valides, retourner 1
+                if (input[i][j] != 'k' && input[i][j] != 'o' && 
+                    input[i][j] != 'l' && input[i][j] != 'i' && input[i][j] != 't')
+                {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
