@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/07 14:24:50 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/12 17:29:47 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,9 +203,11 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
 {
     // Ignorer clients (tel que dans le code original)
     (void)clients;
-    
+
     // Vérifier si nous avons assez d'arguments
-    if (input.size() < 2) {
+    if (input.size() < 2)
+    {
+        //std::cout << "LAAAAAAA 1" << std::endl;
         return 461; // ERR_NEEDMOREPARAMS
     }
     
@@ -225,7 +227,9 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     }
     
     // Si on a atteint la fin, le canal n'existe pas
-    if (it == channels.end()) {
+    if (it == channels.end())
+    {
+        //std::cout << "LAAAAAAA 2" << std::endl;
         return 403; // ERR_NOSUCHCHANNEL
     }
     
@@ -233,20 +237,53 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     if (input.size() >= 2) {
         input.erase(input.begin(), input.begin() + 2);
     }
+
     
     // Vérifier s'il y a des arguments de mode
-    if (input.empty()) {
-        // Si pas d'arguments, on pourrait afficher les modes actuels (non implémenté ici)
+    if (input.empty())
+    {
+        std::string message01 = ":IRC 324 " + client->get_nickname() + " #" + channel_name + " +";
+        std::string message02;
+        std::string mdp = (*it)->get_pass();
+        if (mdp != "")
+            message02 += "k";
+        int res_limit = (*it)->get_limit();
+        if (res_limit != -1)
+            message02 += "l";
+        if ((*it)->get_on_invit() == true)
+            message02 += "i";
+        if ((*it)->get_restriction_topic() == true)
+            message02 += "t";
+        if (mdp != "")
+            message02 = message02 + " " + mdp;
+        if (res_limit != -1)
+        {
+            std::stringstream ss;
+            ss << res_limit;
+            std::string result = ss.str();
+            message02 = message02 + " " + result;
+        }
+        std::string message = message01 + message02;
+        client->receive_message(message, client->get_socket());
+        std::stringstream sstime;
+        sstime << (*it)->getCreationTime();
+        std::string time = sstime.str();
+        std::string messtime = ":IRC 329 " + client->get_nickname() + " #" + channel_name + " " + time;
+        client->receive_message(messtime, client->get_socket()); 
         return 0;
     }
     
     // Vérifier que les arguments commencent par + ou -
-    if (input[0][0] != '+' && input[0][0] != '-') {
+    if (input[0][0] != '+' && input[0][0] != '-')
+    {
+        //std::cout << "LAAAAAAA 4" << std::endl;
         return 461; // ERR_NEEDMOREPARAMS
     }
     
     // Vérifier les caractères de mode valides
-    if (verif_mode_char(input) == 1) {
+    if (verif_mode_char(input) == 1)
+    {
+        //std::cout << "LAAAAAAA 4" << std::endl;
         return 501; // ERR_UMODEUNKNOWNFLAG
     }
     
@@ -267,11 +304,16 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     
     // Parcourir les arguments pour déterminer les modes à modifier
     size_t i = 0;
-    while (i < input.size()) {
+    while (i < input.size())
+    {
         bool isSet = (input[i][0] == '+');
+        int flag = 0;
         
         // Parcourir chaque caractère de mode dans l'argument
-        for (size_t j = 1; j < input[i].size(); j++) {
+        for (size_t j = 1; j < input[i].size(); j++)
+        {
+            if (flag == 1)
+                break;
             char mode = input[i][j];
             
             switch (mode) {
@@ -284,24 +326,40 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     tMode.set = isSet;
                     tMode.processed = true;
                     break;
-                    
+                
                 case 'k':
                     kMode.set = isSet;
                     kMode.processed = true;
                     kMode.index = i;
                     
-                    // Vérifier si un paramètre est nécessaire et disponible pour +k
-                    if (isSet) {
-                        if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
-                            return 461; // ERR_NEEDMOREPARAMS
+                    if (isSet)
+                    {
+                        size_t paramIndex = 0;
+                        size_t w = i + 1;
+
+                        while(w < input.size() && input[w][0] != '-' && input[w][0] != '+')
+                            w++;
+                        if (w - 1 != i + 1)
+                        {
+                            //std::cout << "LAAAAAAA  k 1 trop de params" << std::endl;
+                            return 461;
                         }
+                        paramIndex = w - 1;
                         
                         // Valider le mot de passe
-                        if (is_valid_password(input[i + 1]) == 1) {
+                        if (is_valid_password(input[paramIndex]) == 1)
+                        {
+                            //std::cout << "LAAAAAAA  k 2" << std::endl;
                             return 472; // ERR_PASSWDMISMATCH
                         }
                         
-                        kMode.param = input[i + 1];
+                        // AVANT CA TOUT VA BIEN !!!!!!!!!!!!!!!!!
+                        // Stocker le paramètre
+                        kMode.param = input[paramIndex];
+                        
+                        // Ajuster l'index global pour sauter le paramètre
+                        i = paramIndex;
+                        flag = 1;
                     }
                     break;
                     
@@ -311,22 +369,87 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     oMode.index = i;
                     
                     // Vérifier si un paramètre est disponible
-                    if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
+                    if (i + 1 >= input.size()) {
                         return 461; // ERR_NEEDMOREPARAMS
                     }
                     
-                    // Valider le client selon le mode (+o ou -o)
+                    // Valider les clients selon le mode (+o ou -o)
                     if (isSet) {
-                        oMode.param = is_valid_client(input, i + 1, clients, *it);
+                        // Chercher tous les clients à mettre opérateur
+                        std::string validClientsList;
+                        size_t clientIndex = i + 1;
+                        while (clientIndex < input.size() && 
+                               input[clientIndex][0] != '+' && 
+                               input[clientIndex][0] != '-') {
+                            
+                            // Vérifier si le client est dans le canal
+                            Client* targetClient = (*it)->get_client(input[clientIndex]);
+                            if (targetClient == NULL) {
+                                // Client pas dans le canal, on skip
+                                clientIndex++;
+                                continue;
+                            }
+                            
+                            // Vérifier si le client est déjà opérateur
+                            if ((*it)->get_operator(targetClient) != NULL) {
+                                // Déjà opérateur, on skip
+                                clientIndex++;
+                                continue;
+                            }
+                            
+                            // Ajouter l'opérateur
+                            (*it)->add_operator(targetClient);
+                            targetClient->add_channel_operator(*it);
+                            
+                            // Concaténer les clients valides
+                            if (!validClientsList.empty()) {
+                                validClientsList += " ";
+                            }
+                            validClientsList += input[clientIndex];
+                            
+                            clientIndex++;
+                        }
+                        
+                        oMode.param = validClientsList;
+                        i = clientIndex - 1; // Ajuster l'index pour sauter les clients traités
                     } else {
-                        oMode.param = is_valid_client_2(input, i + 1, clients, *it);
-                    }
-                    if (oMode.param == "442")
-                        return 442;
-                    if (oMode.param == "462")
-                        return 462;
-                    if (oMode.param == "NULL") {
-                        return 461; // ERR_NEEDMOREPARAMS
+                        // Chercher tous les clients à retirer du mode opérateur
+                        std::string validClientsList;
+                        size_t clientIndex = i + 1;
+                        while (clientIndex < input.size() && 
+                               input[clientIndex][0] != '+' && 
+                               input[clientIndex][0] != '-') {
+                            
+                            // Vérifier si le client est dans le canal
+                            Client* targetClient = (*it)->get_client(input[clientIndex]);
+                            if (targetClient == NULL) {
+                                // Client pas dans le canal, on skip
+                                clientIndex++;
+                                continue;
+                            }
+                            
+                            // Vérifier si le client est opérateur
+                            if ((*it)->get_operator(targetClient) == NULL) {
+                                // Pas opérateur, on skip
+                                clientIndex++;
+                                continue;
+                            }
+                            
+                            // Retirer l'opérateur
+                            (*it)->supp_operator(targetClient);
+                            targetClient->supp_channel_operator(*it);
+                            
+                            // Concaténer les clients valides
+                            if (!validClientsList.empty()) {
+                                validClientsList += " ";
+                            }
+                            validClientsList += input[clientIndex];
+                            
+                            clientIndex++;
+                        }
+                        
+                        oMode.param = validClientsList;
+                        i = clientIndex - 1; // Ajuster l'index pour sauter les clients traités
                     }
                     break;
                     
@@ -399,7 +522,6 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
         }
     }
     
-    A VERIFIER !
     if (oMode.processed) {
         std::string message = ":" + client->get_nickname() + " MODE #" + channel_name + 
                             (oMode.set ? " +o " : " -o ") + oMode.param;
@@ -409,6 +531,178 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     return 0;
 }
 
+
+//----------------------------- FONCTIONS UTILES ------------------------------------
+
+
+int Command::verif_client(std::string client_to_verif, std::vector<Client*> clients)
+{
+    std::vector<Client*>::iterator it = clients.begin();
+    while(it != clients.end())
+    {
+        if ((*it)->get_nickname() == client_to_verif || (*it)->get_username() == client_to_verif)
+        {
+            return (0);
+        }
+        it++;
+    }
+    return (1);
+}
+
+int Command::verif_channel(std::string channel_to_verif, std::vector<Channel*> channels)
+{
+    std::vector<Channel*>::iterator it = channels.begin();
+    while(it != channels.end())
+    {
+        if ((*it)->get_name() == channel_to_verif)
+        {
+            return (0);
+        }
+        it++;
+    }
+    return (1);
+}
+
+int Command::is_number(std::string nbr)
+{
+    std::istringstream stream(nbr);
+    int number;
+    if (nbr.empty())
+        return 0;
+    for (size_t i = 0; i < nbr.length(); i++)
+    {
+        if (!isdigit(nbr[i]))
+            return 0;
+    }
+    if (stream >> number && stream.eof())
+    {
+        if (number <= 0)
+            return (0);
+        return number;
+    }
+    return 0;
+}
+
+int Command::is_valid_password(std::string pass)
+{
+    if (pass.empty())
+        return (1);
+    if (pass.find(' ') != std::string::npos)
+        return (1);
+    if (pass.length() > 32)
+        return (1);
+    return (0);
+}
+
+std::string Command::is_valid_client(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel)
+{
+    size_t i = index;
+    std::string client_to_verif;
+    std::string res;
+    res = "";
+    while(i < input.size())
+    {
+        if (input[i][0] == '+' || input[1][0] == '-')
+            return "NULL";
+        client_to_verif = input[i];
+        if (channel->get_client(client_to_verif) == NULL)
+        {
+            //std::cerr << "Error : client not in this channel" << std::endl;
+            return ("442");
+        }
+        std::vector<Client*>::iterator it = clients.begin();
+        while(it != clients.end())
+        {
+            if ((*it)->get_nickname() == client_to_verif)
+            {
+                if (channel->get_operator(*it) != NULL)
+                {
+                    //std::cerr << "Error : client already operator" << std::endl;
+                    break ;
+                }
+                channel->add_operator(*it);
+                (*it)->add_channel_operator(channel);
+                res = res + input[i];
+                if (i + 1 != i < input.size())
+                    res = res + " ";
+                break ;
+            }
+            it++;
+        }
+        i++;
+    }
+    return res;
+}
+
+std::string Command::is_valid_client_2(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel)
+{
+    size_t i = index;
+    std::string client_to_verif;
+    std::string res;
+    res = "";
+    while(i < input.size())
+    {
+        if (input[i][0] == '+' || input[1][0] == '-')
+            return "NULL";
+        client_to_verif = input[i];
+        if (channel->get_client(client_to_verif) == NULL)
+        {
+            //std::cerr << "Error : client not in this channel" << std::endl;
+            return ("462");
+        }
+        std::vector<Client*>::iterator it = clients.begin();
+        while(it != clients.end())
+        {
+            if ((*it)->get_nickname() == client_to_verif)
+            {
+                if (channel->get_operator(*it) == NULL)
+                {
+                    //std::cerr << "Error : client not operator" << std::endl;
+                    break ;
+                }
+                channel->supp_operator(*it);
+                (*it)->supp_channel_operator(channel);
+                res = res + input[i];
+                if (i + 1 != i < input.size())
+                    res = res + " ";
+                break ;
+            }
+            it++;
+        }
+        i++;
+    }
+    return (res);
+}
+
+int Command::verif_mode_char(std::vector<std::string> input)
+{
+    for (size_t i = 0; i < input.size(); i++)
+    {
+        // Vérifier si la chaîne est vide
+        if (input[i].empty())
+            return 1;
+            
+        // Vérifier si la chaîne commence par '+' ou '-'
+        if (input[i][0] == '+' || input[i][0] == '-')
+        {
+            // Si la chaîne n'a que le caractère '+' ou '-' sans autres caractères, c'est invalide
+            if (input[i].size() == 1)
+                return 1;
+                
+            // Vérifier chaque caractère après le premier
+            for (size_t j = 1; j < input[i].size(); j++)
+            {
+                // Si le caractère n'est pas l'un des modes valides, retourner 1
+                if (input[i][j] != 'k' && input[i][j] != 'o' && 
+                    input[i][j] != 'l' && input[i][j] != 'i' && input[i][j] != 't')
+                {
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
 
 // int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels, Client *client)
 // {
@@ -717,175 +1011,254 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
 // }
 
 
-//----------------------------- FONCTIONS UTILES ------------------------------------
-
-
-
-int Command::verif_client(std::string client_to_verif, std::vector<Client*> clients)
-{
-    std::vector<Client*>::iterator it = clients.begin();
-    while(it != clients.end())
-    {
-        if ((*it)->get_nickname() == client_to_verif || (*it)->get_username() == client_to_verif)
-        {
-            return (0);
-        }
-        it++;
-    }
-    return (1);
-}
-
-int Command::verif_channel(std::string channel_to_verif, std::vector<Channel*> channels)
-{
-    std::vector<Channel*>::iterator it = channels.begin();
-    while(it != channels.end())
-    {
-        if ((*it)->get_name() == channel_to_verif)
-        {
-            return (0);
-        }
-        it++;
-    }
-    return (1);
-}
-
-int Command::is_number(std::string nbr)
-{
-    std::istringstream stream(nbr);
-    int number;
-    if (nbr.empty())
-        return 0;
-    for (size_t i = 0; i < nbr.length(); i++)
-    {
-        if (!isdigit(nbr[i]))
-            return 0;
-    }
-    if (stream >> number && stream.eof())
-    {
-        if (number <= 0)
-            return (0);
-        return number;
-    }
-    return 0;
-}
-
-int Command::is_valid_password(std::string pass)
-{
-    if (pass.empty())
-        return (1);
-    if (pass.find(' ') != std::string::npos)
-        return (1);
-    if (pass.length() > 32)
-        return (1);
-    return (0);
-}
-
-std::string Command::is_valid_client(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel)
-{
-    size_t i = index;
-    std::string client_to_verif;
-    std::string res;
-    res = "";
-    while(i < input.size())
-    {
-        if (input[i][0] == '+' || input[1][0] == '-')
-            return "NULL";
-        client_to_verif = input[i];
-        if (channel->get_client(client_to_verif) == NULL)
-        {
-            //std::cerr << "Error : client not in this channel" << std::endl;
-            return ("442");
-        }
-        std::vector<Client*>::iterator it = clients.begin();
-        while(it != clients.end())
-        {
-            if ((*it)->get_nickname() == client_to_verif)
-            {
-                if (channel->get_operator(*it) != NULL)
-                {
-                    //std::cerr << "Error : client already operator" << std::endl;
-                    break ;
-                }
-                channel->add_operator(*it);
-                (*it)->add_channel_operator(channel);
-                res = res + input[i];
-                if (i + 1 != i < input.size())
-                    res = res + " ";
-                break ;
-            }
-            it++;
-        }
-        i++;
-    }
-    return res;
-}
-
-std::string Command::is_valid_client_2(std::vector<std::string> input, int index, std::vector<Client*> clients, Channel *channel)
-{
-    size_t i = index;
-    std::string client_to_verif;
-    std::string res;
-    res = "";
-    while(i < input.size())
-    {
-        if (input[i][0] == '+' || input[1][0] == '-')
-            return "NULL";
-        client_to_verif = input[i];
-        if (channel->get_client(client_to_verif) == NULL)
-        {
-            //std::cerr << "Error : client not in this channel" << std::endl;
-            return ("462");
-        }
-        std::vector<Client*>::iterator it = clients.begin();
-        while(it != clients.end())
-        {
-            if ((*it)->get_nickname() == client_to_verif)
-            {
-                if (channel->get_operator(*it) == NULL)
-                {
-                    //std::cerr << "Error : client not operator" << std::endl;
-                    break ;
-                }
-                channel->supp_operator(*it);
-                (*it)->supp_channel_operator(channel);
-                res = res + input[i];
-                if (i + 1 != i < input.size())
-                    res = res + " ";
-                break ;
-            }
-            it++;
-        }
-        i++;
-    }
-    return (res);
-}
-
-int Command::verif_mode_char(std::vector<std::string> input)
-{
-    for (size_t i = 0; i < input.size(); i++)
-    {
-        // Vérifier si la chaîne est vide
-        if (input[i].empty())
-            return 1;
+// int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*> channels, Client *client)
+// {
+//     // Ignorer clients (tel que dans le code original)
+//     (void)clients;
+    
+//     // Vérifier si nous avons assez d'arguments
+//     if (input.size() < 2) {
+//         return 461; // ERR_NEEDMOREPARAMS
+//     }
+    
+//     // Extraire le nom du canal et supprimer le '#' au début
+//     std::string channel_name = input[1];
+//     if (channel_name[0] == '#') {
+//         channel_name.erase(0, 1);
+//     }
+    
+//     // Trouver le canal dans la liste
+//     std::vector<Channel*>::iterator it = channels.begin();
+//     while (it != channels.end()) {
+//         if (channel_name == (*it)->get_name()) {
+//             break;
+//         }
+//         it++;
+//     }
+    
+//     // Si on a atteint la fin, le canal n'existe pas
+//     if (it == channels.end()) {
+//         return 403; // ERR_NOSUCHCHANNEL
+//     }
+    
+//     // Supprimer les deux premiers éléments (commande et nom du canal)
+//     if (input.size() >= 2) {
+//         input.erase(input.begin(), input.begin() + 2);
+//     }
+    
+//     // Vérifier s'il y a des arguments de mode
+//     if (input.empty()) {
+//         // Si pas d'arguments, on pourrait afficher les modes actuels (non implémenté ici)
+//         return 0;
+//     }
+    
+//     // Vérifier que les arguments commencent par + ou -
+//     if (input[0][0] != '+' && input[0][0] != '-') {
+//         return 461; // ERR_NEEDMOREPARAMS
+//     }
+    
+//     // Vérifier les caractères de mode valides
+//     if (verif_mode_char(input) == 1) {
+//         return 501; // ERR_UMODEUNKNOWNFLAG
+//     }
+    
+//     // Structure pour suivre l'état des modes
+//     struct ModeState {
+//         bool set;           // true si mode à définir, false si à retirer
+//         bool processed;     // indique si le mode a été traité
+//         int index;          // index utilisé pour les modes avec paramètres
+//         std::string param;  // paramètre associé au mode
+//     };
+    
+//     // Initialiser l'état des modes
+//     ModeState iMode = {false, false, 0, ""};  // Mode invitation
+//     ModeState tMode = {false, false, 0, ""};  // Mode restriction topic
+//     ModeState kMode = {false, false, 0, ""};  // Mode mot de passe
+//     ModeState oMode = {false, false, 0, ""};  // Mode opérateur
+//     ModeState lMode = {false, false, 0, ""};  // Mode limite
+    
+//     // Parcourir les arguments pour déterminer les modes à modifier
+//     size_t i = 0;
+//     while (i < input.size()) {
+//         bool isSet = (input[i][0] == '+');
+        
+//         // Parcourir chaque caractère de mode dans l'argument
+//         for (size_t j = 1; j < input[i].size(); j++) {
+//             char mode = input[i][j];
             
-        // Vérifier si la chaîne commence par '+' ou '-'
-        if (input[i][0] == '+' || input[i][0] == '-')
-        {
-            // Si la chaîne n'a que le caractère '+' ou '-' sans autres caractères, c'est invalide
-            if (input[i].size() == 1)
-                return 1;
-                
-            // Vérifier chaque caractère après le premier
-            for (size_t j = 1; j < input[i].size(); j++)
-            {
-                // Si le caractère n'est pas l'un des modes valides, retourner 1
-                if (input[i][j] != 'k' && input[i][j] != 'o' && 
-                    input[i][j] != 'l' && input[i][j] != 'i' && input[i][j] != 't')
-                {
-                    return 1;
-                }
-            }
-        }
-    }
-    return 0;
-}
+//             switch (mode) {
+//                 case 'i':
+//                     iMode.set = isSet;
+//                     iMode.processed = true;
+//                     break;
+                    
+//                 case 't':
+//                     tMode.set = isSet;
+//                     tMode.processed = true;
+//                     break;
+                    
+//                 case 'k':
+//                     kMode.set = isSet;
+//                     kMode.processed = true;
+//                     kMode.index = i;
+                    
+//                     // Vérifier si un paramètre est nécessaire et disponible pour +k
+//                     if (isSet) {
+//                         if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
+//                             return 461; // ERR_NEEDMOREPARAMS
+//                         }
+                        
+//                         // Valider le mot de passe
+//                         if (is_valid_password(input[i + 1]) == 1) {
+//                             return 472; // ERR_PASSWDMISMATCH
+//                         }
+                        
+//                         kMode.param = input[i + 1];
+//                     }
+//                     break;
+                    
+//                 case 'o':
+//                     oMode.set = isSet;
+//                     oMode.processed = true;
+//                     oMode.index = i;
+                    
+//                     // Vérifier si un paramètre est disponible
+//                     if (i + 1 >= input.size()) {
+//                         return 461; // ERR_NEEDMOREPARAMS
+//                     }
+                    
+//                     // Valider les clients selon le mode (+o ou -o)
+//                     if (isSet) {
+//                         // Chercher tous les clients à mettre opérateur
+//                         std::string validClientsList;
+//                         size_t clientIndex = i + 1;
+//                         while (clientIndex < input.size() && 
+//                                input[clientIndex][0] != '+' && 
+//                                input[clientIndex][0] != '-') {
+//                             std::string tempClientResult = is_valid_client(input, clientIndex, clients, *it);
+                            
+//                             if (tempClientResult == "442") {
+//                                 return 442;
+//                             }
+//                             if (tempClientResult == "NULL") {
+//                                 return 461; // ERR_NEEDMOREPARAMS
+//                             }
+                            
+//                             // Concaténer les clients valides
+//                             if (!validClientsList.empty()) {
+//                                 validClientsList += " ";
+//                             }
+//                             validClientsList += tempClientResult;
+                            
+//                             clientIndex++;
+//                         }
+                        
+//                         oMode.param = validClientsList;
+//                         i = clientIndex - 1; // Ajuster l'index pour sauter les clients traités
+//                     } else {
+//                         // Chercher tous les clients à retirer du mode opérateur
+//                         std::string validClientsList;
+//                         size_t clientIndex = i + 1;
+//                         while (clientIndex < input.size() && 
+//                                input[clientIndex][0] != '+' && 
+//                                input[clientIndex][0] != '-') {
+//                             std::string tempClientResult = is_valid_client_2(input, clientIndex, clients, *it);
+                            
+//                             if (tempClientResult == "442") {
+//                                 return 442;
+//                             }
+//                             if (tempClientResult == "NULL") {
+//                                 return 461; // ERR_NEEDMOREPARAMS
+//                             }
+                            
+//                             // Concaténer les clients valides
+//                             if (!validClientsList.empty()) {
+//                                 validClientsList += " ";
+//                             }
+//                             validClientsList += tempClientResult;
+                            
+//                             clientIndex++;
+//                         }
+                        
+//                         oMode.param = validClientsList;
+//                         i = clientIndex - 1; // Ajuster l'index pour sauter les clients traités
+//                     }
+//                     break;
+                    
+//                 case 'l':
+//                     lMode.set = isSet;
+//                     lMode.processed = true;
+//                     lMode.index = i;
+                    
+//                     // Vérifier si un paramètre est nécessaire et disponible pour +l
+//                     if (isSet) {
+//                         if (i + 1 >= input.size() || input[i + 1][0] == '+' || input[i + 1][0] == '-') {
+//                             return 461; // ERR_NEEDMOREPARAMS
+//                         }
+                        
+//                         // Valider la limite
+//                         int limit = is_number(input[i + 1]);
+//                         if (limit == 0) {
+//                             return 461; // ERR_NEEDMOREPARAMS
+//                         }
+                        
+//                         lMode.param = input[i + 1];
+//                     }
+//                     break;
+//             }
+//         }
+//         i++;
+//     }
+    
+//     // Appliquer les changements de mode et envoyer les messages
+//     if (iMode.processed) {
+//         (*it)->set_on_invit(iMode.set);
+//         std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+//                              "@localhost MODE #" + channel_name + (iMode.set ? " +i" : " -i");
+//         (*it)->send_message(message);
+//     }
+    
+//     if (tMode.processed) {
+//         (*it)->set_restriction_topic(tMode.set);
+//         std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+//                              "@localhost MODE #" + channel_name + (tMode.set ? " +t" : " -t");
+//         (*it)->send_message(message);
+//     }
+    
+//     if (kMode.processed) {
+//         if (kMode.set) {
+//             (*it)->set_pass(kMode.param);
+//             std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+//                                 "@localhost MODE #" + channel_name + " +k " + kMode.param;
+//             (*it)->send_message(message);
+//         } else {
+//             (*it)->set_pass("");
+//             std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+//                                 "@localhost MODE #" + channel_name + " -k";
+//             (*it)->send_message(message);
+//         }
+//     }
+    
+//     if (lMode.processed) {
+//         if (lMode.set) {
+//             int limit = is_number(lMode.param);
+//             (*it)->set_limit(limit);
+//             std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+//                                 "@localhost MODE #" + channel_name + " +l " + lMode.param;
+//             (*it)->send_message(message);
+//         } else {
+//             (*it)->set_limit(-1);
+//             std::string message = ":" + client->get_nickname() + "!" + client->get_username() + 
+//                                 "@localhost MODE #" + channel_name + " -l";
+//             (*it)->send_message(message);
+//         }
+//     }
+    
+//     if (oMode.processed) {
+//         std::string message = ":" + client->get_nickname() + " MODE #" + channel_name + 
+//                             (oMode.set ? " +o " : " -o ") + oMode.param;
+//         (*it)->send_message(message);
+//     }
+    
+//     return 0;
+// }

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 HOST=localhost
-PORT=4826
+PORT=4918
+
 TERMINAL_PIDS=()
 
 # Fonction de nettoyage pour le script principal
