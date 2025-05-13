@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: artberna <artberna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/06 11:21:28 by artberna         ###   ########.fr       */
+/*   Updated: 2025/05/13 15:37:00 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ class Client
         void send_message(std::string message, std::vector<Client*> clients, std::vector<Channel*>channels);
         void join_message(Channel *channel);
         std::vector<Channel*>  supp_channel();
+        int operator_vector_nul();
 
         //DEBUG
         void get_operator();

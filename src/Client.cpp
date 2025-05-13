@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/07 12:01:58 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/13 15:38:45 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -638,6 +638,14 @@ void Client::join_message(Channel *channel)
     std::string message3;
     message3 = ":IRC 366 " + this->_nickname + " #" + channel->get_name() + " :" + "End of /NAMES list.";
     this->receive_message(message3, this->_socket);
+}
+
+int Client::operator_vector_nul()
+{
+    if (this->_operator_channels.size() == 0)
+        return (1);
+    else
+        return (0);
 }
 
 
