@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/13 16:54:06 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/14 10:35:18 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -283,13 +283,13 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     // Vérifier les caractères de mode valides
     if (verif_mode_o(input) == 1)
     {
-        std::cout << "verif mode o exit" << std::endl;
+        //std::cout << "verif mode o exit" << std::endl;
         return 501; // ERR_UMODEUNKNOWNFLAG
     }
     
     if (verif_mode_char(input) == 1)
     {
-        std::cout << "verif mode char exit" << std::endl;
+        //std::cout << "verif mode char exit" << std::endl;
         return 501; // ERR_UMODEUNKNOWNFLAG
     }
 
@@ -311,10 +311,12 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
     
     // Parcourir les arguments pour déterminer les modes à modifier
     size_t i = 0;
+    int o_stop = 0;
     while (i < input.size())
     {
         bool isSet = (input[i][0] == '+');
         int flag = 0;
+        
         
         // Parcourir chaque caractère de mode dans l'argument
         for (size_t j = 1; j < input[i].size(); j++)
@@ -459,6 +461,7 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                         
                         oMode.param = validClientsList;
                     }
+                    o_stop = 1;
                     break;
                     
                 case 'l':
@@ -493,6 +496,8 @@ int Command::mode(std::vector<std::string> input, std::vector<Client*> clients, 
                     
             }
         }
+        if (o_stop != 0)
+            break;
         if (flag != 0)
             i += flag;
         i++;
@@ -794,11 +799,11 @@ int Command::verif_mode_char(std::vector<std::string> input)
                 return 1; // Il y a plus d'un caractère de mode avec le mode "o"
             }
         }
-        else
-        {
-            // Si la chaîne ne commence pas par '+' ou '-', c'est invalide
-            return 1;
-        }
+        // else
+        // {
+        //     // Si la chaîne ne commence pas par '+' ou '-', c'est invalide
+        //     return 1;
+        // }
     }
     return 0;
 }

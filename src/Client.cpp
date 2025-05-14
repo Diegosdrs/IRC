@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/13 15:38:45 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/14 10:34:58 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -403,6 +403,67 @@ int Client::privmsg(std::vector<std::string> input, std::vector<Client*> clients
 {
 	if (input[2].empty())
 		return 412;
+    // if (input[2].size() >= 13 && input[2].compare(0, 11, "\001DCC SEND") == 0 && input[2][input[2].size() - 1] == '\001')
+    // {
+    //     //\001 DCC SEND TARGET FILENAME FILESIZE IP PORT \001
+    //     std::vector<std::string> file;
+    //     // Enlever le \001 du début et de la fin
+    //     std::string cleaned_input = input[2].substr(1, input[2].size() - 2);
+        
+    //     // On cherche la position de "TARGET" qui vient après "DCC SEND"
+    //     size_t target_pos = cleaned_input.find("DCC SEND") + 8; // 8 est la longueur de "DCC SEND"
+        
+    //     // Si on a trouvé "DCC SEND", on peut continuer
+    //     if (target_pos != std::string::npos && target_pos < cleaned_input.size())
+    //     {
+    //         // On saute les espaces potentiels entre "SEND" et "TARGET"
+    //         while (target_pos < cleaned_input.size() && cleaned_input[target_pos] == ' ')
+    //             target_pos++;
+            
+    //         // Maintenant target_pos pointe au début de TARGET
+    //         // On extrait la partie du message à partir de TARGET
+    //         std::string target_and_beyond = cleaned_input.substr(target_pos);
+            
+    //         // Position de départ et position actuelle pour la recherche
+    //         size_t start = 0;
+    //         size_t pos = 0;
+            
+    //         // Parcourir la chaîne et diviser aux espaces
+    //         while ((pos = target_and_beyond.find(' ', start)) != std::string::npos)
+    //         {
+    //             // Extraire le sous-élément et l'ajouter au vecteur
+    //             std::string token = target_and_beyond.substr(start, pos - start);
+    //             if (!token.empty())
+    //                 file.push_back(token);
+                
+    //             // Mettre à jour la position de départ pour la prochaine recherche
+    //             start = pos + 1;
+    //         }
+            
+    //         // Ajouter le dernier élément (qui devrait être PORT)
+    //         std::string last_token = target_and_beyond.substr(start);
+    //         if (!last_token.empty())
+    //             file.push_back(last_token);
+            
+    //         // Structure attendue : ["TARGET", "FILENAME", "FILESIZE", "IP", "PORT"]
+    //         if (file.size() >= 5)
+    //         {
+    //             // À ce stade:
+    //             // file[0] contient TARGET
+    //             // file[1] contient FILENAME
+    //             // file[2] contient FILESIZE
+    //             // file[3] contient IP
+    //             // file[4] contient PORT
+                
+    //             // Vous pouvez maintenant traiter ces informations comme nécessaire
+    //         }
+    //         else
+    //         {
+    //             return 
+    //         }
+    //     }
+
+    //}
     if (input[1][0] == '#' || input[1][0] == '!' || input[1][0] == '&' || input[1][0] == '+')
     {
         std::string channel_name = input[1];
