@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:35:44 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/15 13:44:43 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/15 17:13:28 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,8 @@ void  Server::initErrorCodes(){
 	_errorCodes["462"] = "You may not reregister";
 	_errorCodes["464"] = "Password incorrect";
 	_errorCodes["465"] = "You are banned from this server";
+	_errorCodes["467"] = "User already has mode +o";
+	_errorCodes["468"] = "User doesn't have mode +o";
 	_errorCodes["471"] = "Cannot join channel (+l)";
 	_errorCodes["472"] = "Unknown mode char";
 	_errorCodes["473"] = "Cannot join channel (+i)";
@@ -189,7 +191,7 @@ void Server::sendClientError(int client_fd, const std::string& key, const std::s
 	if (!cmd.empty())
 		to_send += " " + cmd;
 
-	to_send += ": " + errorMsg + "\r\n";
+	to_send += " :" + errorMsg + "\r\n";
 
 	ssize_t sent = send(client_fd, to_send.c_str(), to_send.length(), 0);
 	if (sent < 0)
@@ -263,10 +265,8 @@ void safeClose(int& fd)
 }
 
 void Server::removeClient(size_t index){
-	int fd = _fds[index].fd;
-	safeClose(_fds[index].fd);
-	_fds.erase(_fds.begin() + index);
 
+	int fd = _fds[index].fd;
 	std::vector<Client*>::iterator it = _clients.begin();
 	std::vector<Client*>::iterator ite = _clients.end();
 
@@ -293,6 +293,9 @@ void Server::removeClient(size_t index){
 			break;
 		}
 	}
+	
+	safeClose(_fds[index].fd);
+	_fds.erase(_fds.begin() + index);
 	std::cout << "Client disconnected" << std::endl;
 }
 
@@ -1052,6 +1055,7 @@ void Server::run(){
 	signal(SIGINT, handleSignal);
 	signal(SIGTERM, handleSignal);
 	signal(SIGQUIT, handleSignal);
+	signal(SIGPIPE, handleSignal);
 
 	_fds.resize(1);
 	_fds[0].fd = _server_socket;

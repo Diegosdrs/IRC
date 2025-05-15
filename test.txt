@@ -42,5 +42,3 @@ MODE #channel -o user not operator	ok			ok
 
 
 si je quitte un chan avec Dave, bien plus dans le channel mais pas de display sur le channel, dois y avoir un message type user has left channel
-
-erreur dans irssi a debug : 16:57 -!- Irssi: critical nicklist_set_host: assertion 'host != NULL' failed, je crois que normal avec ce quon doit gerer ;ais a verifier

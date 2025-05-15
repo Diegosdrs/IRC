@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOST=localhost
-PORT=4804
+PORT=5001
 
 TERMINAL_PIDS=()
 
@@ -44,7 +44,7 @@ gnome-terminal --title="IRC Client - alice" -- bash -c "
     sleep 0.3
     echo -e 'NICK alice\r' >&3
     sleep 0.3
-    echo -e 'USER alice 0 * :Alice Anderson\r' >&3
+    echo -e 'USER ualice 0 * :Alice Anderson\r' >&3
     sleep 0.3
     echo -e 'JOIN #room\r' >&3
 
@@ -92,7 +92,7 @@ gnome-terminal --title="IRC Client - bob" -- bash -c "
     sleep 0.3
     echo -e 'NICK bob\r' >&3
     sleep 0.3
-    echo -e 'USER bob 0 * :Bob Brown\r' >&3
+    echo -e 'USER ubob 0 * :Bob Brown\r' >&3
     sleep 0.3
     echo -e 'JOIN #room\r' >&3
 
@@ -140,7 +140,7 @@ gnome-terminal --title="IRC Client - carol" -- bash -c "
     sleep 0.3
     echo -e 'NICK carol\r' >&3
     sleep 0.3
-    echo -e 'USER carol 0 * :Carol Clark\r' >&3
+    echo -e 'USER ucarol 0 * :Carol Clark\r' >&3
     sleep 0.3
     #echo -e 'JOIN #room\r' >&3
 
@@ -188,7 +188,7 @@ gnome-terminal --title="IRC Client - dave" -- bash -c "
     sleep 0.3
     echo -e 'NICK dave\r' >&3
     sleep 0.3
-    echo -e 'USER dave 0 * :Dave Davis\r' >&3
+    echo -e 'USER udave 0 * :Dave Davis\r' >&3
     sleep 0.3
     #echo -e 'JOIN #room\r' >&3
 

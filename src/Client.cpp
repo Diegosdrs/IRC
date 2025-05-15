@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/15 13:44:59 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/15 17:46:15 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@ Client::Client(int socket)
     this->_nickname = "default";
     this->_username = "default";
     this->_realname = "default";
+    this->_hostname = "default";
+    this->_hostname = "default";
     this->_is_authenticated = false;
     this-> _is_operator = false;
     this->_hasNick = false;
@@ -54,6 +56,9 @@ std::vector<Channel*> Client::supp_channel()
     {
 		if (*it)
 		{
+            std::string message;
+            message = ":" + this->_nickname + "!" + this->_username + "@localhost has left #" + (*it)->get_name();
+            (*it)->send_message(message);
 			(*it)->remove_client(this);
 			if ((*it)->get_nbr_of_client() <= 0)
 				_channel_to_delete.push_back(*it);
@@ -145,6 +150,8 @@ int    Client::set_username(std::vector<std::string> input, std::vector<Client*>
     }
     this->_username = input[1];
     this->_realname = input[4];
+    this->_mode = input[2];
+    this->_hostname = input[3];
     return (0);
 }
 
@@ -234,6 +241,7 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
             {
                 if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
                 {
+                    erreur ici surement !!!! c'est quand on kick irssi et on ajoute mode +i et quon l'invite pas 
                     return (473);
                 }
                 if (input[2] != (*it)->get_pass() && (*it)->get_pass() != "")
@@ -256,9 +264,9 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
                 }
                 //std::cout << "Client " << this->_nickname << " add in " << (*it)->get_name() << " channel." << std::endl;
                 std::string message;
+                this->join_message(*it);
                 message = ":" + this->_nickname + "!~" + this->_username+ "@localhost JOIN :#" + (*it)->get_name();
                 (*it)->send_message(message);
-                this->join_message(*it);
                 return (0);
             }
             else
@@ -403,7 +411,7 @@ int Client::execute_command(std::vector<std::string> input, std::vector<Client*>
         return (res);
     }
     if (input[0] == "XX")
-        this->XX();
+        this->XX(input, clients);
     if (input[0] == "XXX")
         this->XXX(input, channels);
     return (0);
@@ -413,67 +421,6 @@ int Client::privmsg(std::vector<std::string> input, std::vector<Client*> clients
 {
 	if (input[2].empty())
 		return 412;
-    // if (input[2].size() >= 13 && input[2].compare(0, 11, "\001DCC SEND") == 0 && input[2][input[2].size() - 1] == '\001')
-    // {
-    //     //\001 DCC SEND TARGET FILENAME FILESIZE IP PORT \001
-    //     std::vector<std::string> file;
-    //     // Enlever le \001 du début et de la fin
-    //     std::string cleaned_input = input[2].substr(1, input[2].size() - 2);
-
-    //     // On cherche la position de "TARGET" qui vient après "DCC SEND"
-    //     size_t target_pos = cleaned_input.find("DCC SEND") + 8; // 8 est la longueur de "DCC SEND"
-
-    //     // Si on a trouvé "DCC SEND", on peut continuer
-    //     if (target_pos != std::string::npos && target_pos < cleaned_input.size())
-    //     {
-    //         // On saute les espaces potentiels entre "SEND" et "TARGET"
-    //         while (target_pos < cleaned_input.size() && cleaned_input[target_pos] == ' ')
-    //             target_pos++;
-
-    //         // Maintenant target_pos pointe au début de TARGET
-    //         // On extrait la partie du message à partir de TARGET
-    //         std::string target_and_beyond = cleaned_input.substr(target_pos);
-
-    //         // Position de départ et position actuelle pour la recherche
-    //         size_t start = 0;
-    //         size_t pos = 0;
-
-    //         // Parcourir la chaîne et diviser aux espaces
-    //         while ((pos = target_and_beyond.find(' ', start)) != std::string::npos)
-    //         {
-    //             // Extraire le sous-élément et l'ajouter au vecteur
-    //             std::string token = target_and_beyond.substr(start, pos - start);
-    //             if (!token.empty())
-    //                 file.push_back(token);
-
-    //             // Mettre à jour la position de départ pour la prochaine recherche
-    //             start = pos + 1;
-    //         }
-
-    //         // Ajouter le dernier élément (qui devrait être PORT)
-    //         std::string last_token = target_and_beyond.substr(start);
-    //         if (!last_token.empty())
-    //             file.push_back(last_token);
-
-    //         // Structure attendue : ["TARGET", "FILENAME", "FILESIZE", "IP", "PORT"]
-    //         if (file.size() >= 5)
-    //         {
-    //             // À ce stade:
-    //             // file[0] contient TARGET
-    //             // file[1] contient FILENAME
-    //             // file[2] contient FILESIZE
-    //             // file[3] contient IP
-    //             // file[4] contient PORT
-
-    //             // Vous pouvez maintenant traiter ces informations comme nécessaire
-    //         }
-    //         else
-    //         {
-    //             return
-    //         }
-    //     }
-
-    //}
     if (input[1][0] == '#' || input[1][0] == '!' || input[1][0] == '&' || input[1][0] == '+')
     {
         std::string channel_name = input[1];
@@ -774,16 +721,37 @@ void Client::get_invitation()
     }
 }
 
-void Client::XX()
+void Client::XX(std::vector<std::string> input, std::vector<Client*> clients)
 {
-    std::string sp = "      ";
-    std::cout << std::endl;
-    std::cout << sp << this->get_nickname() << " / " << this->get_username() << std::endl;
-    std::cout << sp << " authentificated = " << this->get_autentification() << std::endl;
-    this->get_operator();
-    this->get_channel();
-    this->get_invitation();
-    std::cout << sp << "END" << std::endl;
+    if (input.size() == 1)
+    {
+        std::string sp = "      ";
+        std::cout << std::endl;
+        std::cout << sp << this->get_nickname() << " / " << this->get_username() << std::endl;
+        std::cout << sp << " authentificated = " << this->get_autentification() << std::endl;
+        this->get_operator();
+        this->get_channel();
+        this->get_invitation();
+        std::cout << sp << "END" << std::endl;
+    }
+    else
+    {
+        std::vector<Client*>::iterator it = clients.begin();
+        while(it != clients.end())
+        {
+            if ((*it)->get_nickname() == input[1])
+                break;
+            it++;
+        }
+        std::string sp = "      ";
+        std::cout << std::endl;
+        std::cout << sp << (*it)->get_nickname() << " / " << (*it)->get_username() << std::endl;
+        std::cout << sp << " authentificated = " << (*it)->get_autentification() << std::endl;
+        (*it)->get_operator();
+        (*it)->get_channel();
+        (*it)->get_invitation();
+        std::cout << sp << "END" << std::endl;
+    }
 }
 
 void Client::XXX(std::vector<std::string> input, std::vector<Channel*>channels)
