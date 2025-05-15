@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: artberna <artberna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:35:44 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/06 14:35:45 by artberna         ###   ########.fr       */
+/*   Updated: 2025/05/15 13:44:43 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,6 +127,7 @@ void  Server::initErrorCodes(){
 	_errorCodes["441"] = "They aren't on that channel";
 	_errorCodes["442"] = "You're not on that channel";
 	_errorCodes["443"] = "Already on channel";
+	_errorCodes["444"] = "Already operator";
 	_errorCodes["451"] = "You have not registered";
 	_errorCodes["459"] = "Too many arguments";
 	_errorCodes["461"] = "Not enough parameters";
@@ -139,6 +140,8 @@ void  Server::initErrorCodes(){
 	_errorCodes["474"] = "Cannot join channel (+b)";
 	_errorCodes["475"] = "Cannot join channel (+k)";
 	_errorCodes["476"] = "Bad channel mask";
+	_errorCodes["477"] = "Invalid limits";
+	_errorCodes["478"] = "Errorneous channelname";
 	_errorCodes["481"] = "Permission Denied (You're not an IRC operator)";
 	_errorCodes["482"] = "You're not channel operator";
 	_errorCodes["484"] = "Your connection is restricted";
@@ -448,6 +451,7 @@ void Server::parseCommand(std::string msg, int client_fd){
 		handlePass(client_fd, params, client);
 	else if (cmd == "QUIT")
 		handleQuit(client_fd);
+	else if (cmd == "WHO"){}
 	else if (cmd == "XX")
 		client->execute_command(params, _clients, _channels);
 	else if (cmd == "XXX")
@@ -479,17 +483,20 @@ void Server::handleCommandBotPriv(int client_fd, std::vector<std::string> params
 	else if (cmd == "HELP")
 		to_ret = "Commands are : !HELP, !TIME & !WEATHER";
 	else if (cmd == "WHOAMI"){
-		if (!client->get_nickname().empty()) // remplacer par booleen has_nick
+		if (client->get_bool_nick() == true)
 			to_ret = "Your nick is: " + client->get_nickname();
-		if (!client->get_username().empty()) // remplacer par booleen has_user
-			to_ret += "\nYour user is: " + client->get_username();
-	}
-	else {
-		sendClientError(client_fd, "421", cmd + " :Use !HELP to see all the bot commands");
-		return;
-	}
+		else
+			to_ret = "No nick given";
 
-	std::string response = ":" + _server_name + "_bot PRIVMSG " + client->get_nickname() + " :" + to_ret + "\r\n";
+		if (client->get_bool_user() == true)
+			to_ret += "\nYour user is: " + client->get_username();
+		else
+			to_ret += "\nNo user given";
+	}
+	else
+		to_ret += "Unknow command :Use !HELP to see all the bot commands";
+
+	std::string response = ":" + _server_name + "_bot PRIVMSG " + params[1] + " :" + to_ret + "\r\n";
 	ssize_t sent = send(client_fd, response.c_str(), response.size(), 0);
 	if (sent < 0)
 		throw std::runtime_error(std::string("send: ") + std::strerror(errno));
@@ -512,11 +519,15 @@ void Server::handleCommandBot(int client_fd, std::vector<std::string> params, Cl
 	else if (cmd == "HELP")
 		to_ret = "Commands are : !HELP, !TIME & !WEATHER";
 	else if (cmd == "WHOAMI"){
-		if (!client->get_nickname().empty()) // remplacer par booleen has_nick
+		if (client->get_bool_nick() == true)
 			to_ret = "Your nick is: " + client->get_nickname();
-		if (!client->get_username().empty()) // remplacer par booleen has_user
+		else
+			to_ret = "No nick given";
+		if (client->get_bool_user() == true)
 			to_ret += "\nYour user is: " + client->get_username();
-	}
+		else
+			to_ret += "\nNo user given";
+		}
 	else {
 		sendClientError(client_fd, "421", cmd + " :Use !HELP to see all the bot commands");
 		return;
@@ -983,6 +994,7 @@ void Server::handlePrivmsg(int client_fd, std::vector<std::string> params, Clien
 }
 
 void Server::handleMode(int client_fd, std::vector<std::string> params, Client* client){
+
 	if (!client->isRegistered()) {
 		sendClientError(client_fd, "451", params[0]);
 		return;
@@ -992,11 +1004,16 @@ void Server::handleMode(int client_fd, std::vector<std::string> params, Client* 
 		sendClientError(client_fd, "461", params[0]);
 		return;
 	}
+	
+	// if (client->get_irrsi() == false && params[1][0] != '#'){
+	// 	client->set_irrsi(true);
+	// 	return;
+	// }
 
-	if (!isValidChannel(params[1])){
-		sendClientError(client_fd, "476", params[1]);
-		return;
-	}
+	// if (!isValidChannel(params[1])){
+	// 	sendClientError(client_fd, "478", params[1]);
+	// 	return;
+	// }
 
 	int res = client->execute_command(params, _clients, _channels);
 	if (res != 0 )

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
+/*   By: artberna <artberna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 13:25:10 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/13 15:37:00 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/14 11:00:34 by artberna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,9 @@ class Client
 		bool get_bool_user();
 		bool isRegistered();
 
+		void set_irrsi(bool);
+		bool get_irrsi();
+
 
         // Gestion des channels
         int join_channel(std::vector<std::string> input, std::vector<Channel*> &channels);
@@ -97,6 +100,7 @@ class Client
 		bool _hasPassword;
 		bool _hasNick;
 		bool _hasUser;
+		bool _irssi;
         std::vector<Channel*> _invited_channels;
         std::vector<Channel*> _channels;
         std::vector<Channel*> _operator_channels;

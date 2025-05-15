@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/14 10:34:58 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/15 13:44:59 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ Client::Client(int socket)
     this->_hasNick = false;
 	this->_hasPassword = false;
 	this->_hasUser = false;
+	this->_irssi = false;
     this->_command = new Command();
 }
 
@@ -196,6 +197,15 @@ bool Client::isRegistered(){
 	return _hasNick && _hasPassword && _hasUser;
 }
 
+bool Client::get_irrsi()
+{
+	return this->_irssi;
+}
+
+void Client::set_irrsi(bool response)
+{
+	this->_irssi = response;
+}
 
 //----------------------------- GESTION DES CHANNELS ------------------------------------
 
@@ -409,25 +419,25 @@ int Client::privmsg(std::vector<std::string> input, std::vector<Client*> clients
     //     std::vector<std::string> file;
     //     // Enlever le \001 du début et de la fin
     //     std::string cleaned_input = input[2].substr(1, input[2].size() - 2);
-        
+
     //     // On cherche la position de "TARGET" qui vient après "DCC SEND"
     //     size_t target_pos = cleaned_input.find("DCC SEND") + 8; // 8 est la longueur de "DCC SEND"
-        
+
     //     // Si on a trouvé "DCC SEND", on peut continuer
     //     if (target_pos != std::string::npos && target_pos < cleaned_input.size())
     //     {
     //         // On saute les espaces potentiels entre "SEND" et "TARGET"
     //         while (target_pos < cleaned_input.size() && cleaned_input[target_pos] == ' ')
     //             target_pos++;
-            
+
     //         // Maintenant target_pos pointe au début de TARGET
     //         // On extrait la partie du message à partir de TARGET
     //         std::string target_and_beyond = cleaned_input.substr(target_pos);
-            
+
     //         // Position de départ et position actuelle pour la recherche
     //         size_t start = 0;
     //         size_t pos = 0;
-            
+
     //         // Parcourir la chaîne et diviser aux espaces
     //         while ((pos = target_and_beyond.find(' ', start)) != std::string::npos)
     //         {
@@ -435,16 +445,16 @@ int Client::privmsg(std::vector<std::string> input, std::vector<Client*> clients
     //             std::string token = target_and_beyond.substr(start, pos - start);
     //             if (!token.empty())
     //                 file.push_back(token);
-                
+
     //             // Mettre à jour la position de départ pour la prochaine recherche
     //             start = pos + 1;
     //         }
-            
+
     //         // Ajouter le dernier élément (qui devrait être PORT)
     //         std::string last_token = target_and_beyond.substr(start);
     //         if (!last_token.empty())
     //             file.push_back(last_token);
-            
+
     //         // Structure attendue : ["TARGET", "FILENAME", "FILESIZE", "IP", "PORT"]
     //         if (file.size() >= 5)
     //         {
@@ -454,12 +464,12 @@ int Client::privmsg(std::vector<std::string> input, std::vector<Client*> clients
     //             // file[2] contient FILESIZE
     //             // file[3] contient IP
     //             // file[4] contient PORT
-                
+
     //             // Vous pouvez maintenant traiter ces informations comme nécessaire
     //         }
     //         else
     //         {
-    //             return 
+    //             return
     //         }
     //     }
 
@@ -585,6 +595,19 @@ int Client::topic(std::vector<std::string> input, std::vector<Client*> clients, 
 
 int Client::mode(std::vector<std::string> input, std::vector<Client*> clients, std::vector<Channel*>channels)
 {
+    if (input[1] == this->_nickname || input[1] == this->_username)
+        return (0);
+    const std::string not_in_first = "!#&+";
+	const std::string not_inside = " ,:\x07";
+	if (input[1].empty())
+		return 478;
+	if (not_in_first.find(input[1][0]) == std::string::npos)
+		return 478;
+	if (input[1].size() > 50)
+		return 478;
+	for (size_t i = 1; i < input[1].size(); i++)
+		if (not_inside.find(input[1][i]) != std::string::npos)
+			return 478;
     std::string channel_name = input[1];
     channel_name.erase(0,1);
     if (this->_command->verif_channel(channel_name, channels) == 1)
@@ -592,6 +615,11 @@ int Client::mode(std::vector<std::string> input, std::vector<Client*> clients, s
         //std::cerr << "Channel " << channel_name << " doesn't exist" << std::endl;
         return (403);
     }
+	if (input.size() == 2)
+	{
+		int res = this->_command->mode(input, clients, channels, this);
+    	return (res);
+	}
     std::vector<Channel*>::iterator it = channels.begin();
     while (it != channels.end())
     {

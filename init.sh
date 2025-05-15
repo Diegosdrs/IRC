@@ -1,21 +1,21 @@
 #!/bin/bash
 
 HOST=localhost
-PORT=4802
+PORT=4804
 
 TERMINAL_PIDS=()
 
 # Fonction de nettoyage pour le script principal
 cleanup_main() {
     echo "Fermeture de toutes les connexions..."
-    
+
     # Fermer tous les terminaux ouverts
     for pid in "${TERMINAL_PIDS[@]}"; do
         if ps -p $pid > /dev/null; then
             kill -TERM $pid 2>/dev/null
         fi
     done
-    
+
     exit 0
 }
 
@@ -31,13 +31,13 @@ gnome-terminal --title="IRC Client - alice" -- bash -c "
         [[ -e /proc/self/fd/3 ]] && exec 3>&-
         exit 0
     }
-    
+
     # Configuration du trap pour le client
     trap cleanup_client SIGINT SIGTERM EXIT
-    
+
     # Établir la connexion
     exec 3<>/dev/tcp/$HOST/$PORT
-    
+
     # Messages d'initialisation
     sleep 1
     echo -e 'PASS 1\r' >&3
@@ -47,16 +47,16 @@ gnome-terminal --title="IRC Client - alice" -- bash -c "
     echo -e 'USER alice 0 * :Alice Anderson\r' >&3
     sleep 0.3
     echo -e 'JOIN #room\r' >&3
-    
+
     # Configuration pour permettre la lecture et l'écriture
     echo 'Client IRC connecté en tant que alice. Tapez vos commandes (Ctrl+C pour quitter):'
-    
+
     # Lecture des réponses du serveur en arrière-plan
     (while IFS= read -r line <&3; do
         echo \"\$line\"
     done) &
     BG_PID=\$!
-    
+
     # Lecture de l'entrée utilisateur et envoi au serveur
     while read input; do
         # Vérifier si on veut quitter
@@ -79,13 +79,13 @@ gnome-terminal --title="IRC Client - bob" -- bash -c "
         [[ -e /proc/self/fd/3 ]] && exec 3>&-
         exit 0
     }
-    
+
     # Configuration du trap pour le client
     trap cleanup_client SIGINT SIGTERM EXIT
-    
+
     # Établir la connexion
     exec 3<>/dev/tcp/$HOST/$PORT
-    
+
     # Messages d'initialisation
     sleep 1
     echo -e 'PASS 1\r' >&3
@@ -95,16 +95,16 @@ gnome-terminal --title="IRC Client - bob" -- bash -c "
     echo -e 'USER bob 0 * :Bob Brown\r' >&3
     sleep 0.3
     echo -e 'JOIN #room\r' >&3
-    
+
     # Configuration pour permettre la lecture et l'écriture
     echo 'Client IRC connecté en tant que bob. Tapez vos commandes (Ctrl+C pour quitter):'
-    
+
     # Lecture des réponses du serveur en arrière-plan
     (while IFS= read -r line <&3; do
         echo \"\$line\"
     done) &
     BG_PID=\$!
-    
+
     # Lecture de l'entrée utilisateur et envoi au serveur
     while read input; do
         # Vérifier si on veut quitter
@@ -127,13 +127,13 @@ gnome-terminal --title="IRC Client - carol" -- bash -c "
         [[ -e /proc/self/fd/3 ]] && exec 3>&-
         exit 0
     }
-    
+
     # Configuration du trap pour le client
     trap cleanup_client SIGINT SIGTERM EXIT
-    
+
     # Établir la connexion
     exec 3<>/dev/tcp/$HOST/$PORT
-    
+
     # Messages d'initialisation
     sleep 1
     echo -e 'PASS 1\r' >&3
@@ -143,16 +143,16 @@ gnome-terminal --title="IRC Client - carol" -- bash -c "
     echo -e 'USER carol 0 * :Carol Clark\r' >&3
     sleep 0.3
     #echo -e 'JOIN #room\r' >&3
-    
+
     # Configuration pour permettre la lecture et l'écriture
     echo 'Client IRC connecté en tant que carol. Tapez vos commandes (Ctrl+C pour quitter):'
-    
+
     # Lecture des réponses du serveur en arrière-plan
     (while IFS= read -r line <&3; do
         echo \"\$line\"
     done) &
     BG_PID=\$!
-    
+
     # Lecture de l'entrée utilisateur et envoi au serveur
     while read input; do
         # Vérifier si on veut quitter
@@ -175,13 +175,13 @@ gnome-terminal --title="IRC Client - dave" -- bash -c "
         [[ -e /proc/self/fd/3 ]] && exec 3>&-
         exit 0
     }
-    
+
     # Configuration du trap pour le client
     trap cleanup_client SIGINT SIGTERM EXIT
-    
+
     # Établir la connexion
     exec 3<>/dev/tcp/$HOST/$PORT
-    
+
     # Messages d'initialisation
     sleep 1
     echo -e 'PASS 1\r' >&3
@@ -191,16 +191,16 @@ gnome-terminal --title="IRC Client - dave" -- bash -c "
     echo -e 'USER dave 0 * :Dave Davis\r' >&3
     sleep 0.3
     #echo -e 'JOIN #room\r' >&3
-    
+
     # Configuration pour permettre la lecture et l'écriture
     echo 'Client IRC connecté en tant que dave. Tapez vos commandes (Ctrl+C pour quitter):'
-    
+
     # Lecture des réponses du serveur en arrière-plan
     (while IFS= read -r line <&3; do
         echo \"\$line\"
     done) &
     BG_PID=\$!
-    
+
     # Lecture de l'entrée utilisateur et envoi au serveur
     while read input; do
         # Vérifier si on veut quitter
