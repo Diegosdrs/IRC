@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 15:25:11 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/15 17:00:07 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/20 11:42:29 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ void    Channel::status_channel()
     std::cout << " In this channel : " << this->_name << std::endl;
     while(it != _clients.end())
     {
-        std::cout << "client = " << (*it)->get_nickname() << std::endl;
+        //std::cout << "client = " << (*it)->get_nickname() << std::endl;
         it++;
     }
 }
@@ -179,10 +179,21 @@ void    Channel::remove_client(Client *client)
         if (*it == client)
         {
             _clients.erase(it);
-            std::cout << "Client " << client->get_nickname() << " removed from channel " << this->_name << std::endl;
-            return ;
+            //std::cout << "Client " << client->get_nickname() << " removed from channel " << this->_name << std::endl;
+            break ;
         }
         it++;
+    }
+    std::vector<Client*>::iterator ite = _operator_clients.begin();
+    while(ite != _operator_clients.end())
+    {
+        if (*ite == client)
+        {
+            _operator_clients.erase(ite);
+            //std::cout << "Client " << client->get_nickname() << " removed from channel " << this->_name << std::endl;
+            break ;
+        }
+        ite++;
     }
 }
 

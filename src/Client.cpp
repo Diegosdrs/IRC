@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/15 17:46:15 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/20 11:34:49 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,15 +241,18 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
             {
                 if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
                 {
-                    erreur ici surement !!!! c'est quand on kick irssi et on ajoute mode +i et quon l'invite pas 
+                    //erreur ici surement !!!! c'est quand on kick irssi et on ajoute mode +i et quon l'invite pas
+                    //std::cout << " INVIT " << std::endl;
                     return (473);
                 }
                 if (input[2] != (*it)->get_pass() && (*it)->get_pass() != "")
                 {
+                    //std::cout << " PASS " << std::endl;
                     return (475);
                 }
                 if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
                 {
+                    //std::cout << " LIMIT " << std::endl;
                     return (471);
                 }
                 (*it)->add_client(this);
@@ -274,16 +277,19 @@ int    Client::join_channel(std::vector<std::string> input, std::vector<Channel*
                 if ((*it)->get_on_invit() == true && this->get_invited_by(*it) == false)
                 {
                     //std::cerr << "Error : you haven't been invited" << std::endl;
+                    //std::cout << " INVIT " << std::endl;
                     return (473);
                 }
                 if ((*it)->get_pass() != "")
                 {
                     //std::cerr << "Error : you need a password" << std::endl;
+                    //std::cout << " PASS " << std::endl;
                     return (475);
                 }
                 if ((*it)->get_limit() != -1 && (*it)->get_nbr_of_client() >= (*it)->get_limit())
                 {
                     //std::cerr << "Channel " << channel_name << " is full" << std::endl;
+                    //std::cout << " LIMIT " << std::endl;
                     return (471);
                 }
                 (*it)->add_client(this);
@@ -330,6 +336,16 @@ void    Client::leave_channel(std::string channel_name, std::vector<Channel*> &c
             break ;
         }
         ite++;
+    }
+    std::vector<Channel*>::iterator ites = this->_operator_channels.begin();
+    while(ites != _operator_channels.end())
+    {
+        if ((*ites)->get_name() == channel_name)
+        {
+            this->_operator_channels.erase(ites);
+            break ;
+        }
+        ites++;
     }
     //std::cout << "Client " << this->_nickname << " has left " << channel_name << " channel." << std::endl;
     return ;
