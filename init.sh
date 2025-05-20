@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HOST=localhost
-PORT=4006
+PORT=5006
 
 TERMINAL_PIDS=()
 
