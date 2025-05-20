@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:07:04 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/20 11:32:33 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/20 11:46:44 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -757,51 +757,6 @@ int Command::verif_mode_char(std::vector<std::string> input)
     }
     return 0;
 }
-
-// int Command::verif_mode_char(std::vector<std::string> input)
-// {
-//     for (size_t i = 0; i < input.size(); i++)
-//     {
-//         // Vérifier si la chaîne est vide
-//         if (input[i].empty())
-//             return 1;
-
-//         // Vérifier si la chaîne commence par '+' ou '-'
-//         if (input[i][0] == '+' || input[i][0] == '-')
-//         {
-//             // Si la chaîne n'a que le caractère '+' ou '-' sans autres caractères, c'est invalide
-//             if (input[i].size() == 1)
-//                 return 1;
-
-//             // Tableau pour suivre les modes déjà vus
-//             bool seen_modes[256] = {false}; // Tableau assez grand pour tous les caractères ASCII
-
-//             // Vérifier chaque caractère après le premier
-//             for (size_t j = 1; j < input[i].size(); j++)
-//             {
-//                 char current_mode = input[i][j];
-
-//                 // Vérifier si le caractère est un mode valide
-//                 if (current_mode != 'k' && current_mode != 'o' &&
-//                     current_mode != 'l' && current_mode != 'i' && current_mode != 't')
-//                 {
-//                     return 1;
-//                 }
-
-//                 // Vérifier si ce mode a déjà été vu dans cette chaîne
-//                 if (seen_modes[(unsigned char)current_mode])
-//                 {
-//                     // Le mode apparaît plus d'une fois, c'est invalide
-//                     return 1;
-//                 }
-
-//                 // Marquer le mode comme vu
-//                 seen_modes[(unsigned char)current_mode] = true;
-//             }
-//         }
-//     }
-//     return 0;
-// }
 
 int Command::after_w(std::string input, size_t index, int flag)
 {
