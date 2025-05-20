@@ -91,9 +91,9 @@ class Server {
 		void	handleCap(int, std::vector<std::string>, Client*);
 		void	handleUser(int, std::vector<std::string>, Client*);
 		void	handleTopic(int, std::vector<std::string>, Client*);
-		// void	handleSend(int, std::vector<std::string>, Client*);
-		// void	handleAccept(int, std::vector<std::string>, Client*);
-		// void	handleDecline(int, std::vector<std::string>, Client*);
+		void	handleSend(int, std::vector<std::string>, Client*);
+		void	handleAccept(int, std::vector<std::string>, Client*);
+		void	handleDecline(int, std::vector<std::string>, Client*);
 		void	handlePing(int, std::vector<std::string>);
 		void	handleQuit(int);
 
