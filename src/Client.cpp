@@ -6,7 +6,7 @@
 /*   By: dsindres <dsindres@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/15 13:12:33 by dsindres          #+#    #+#             */
-/*   Updated: 2025/05/20 11:34:49 by dsindres         ###   ########.fr       */
+/*   Updated: 2025/05/21 13:49:00 by dsindres         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -721,6 +721,11 @@ void Client::get_channel()
     std::vector<Channel*>::iterator it = _channels.begin();
     while(it != _channels.end())
     {
+// valgrind ./irc <port> <pass>
+
+// sur un autre terminal
+// nc localhost <port>
+// pass nick/user etc dermerde toi tes un grand garcon ptit zizi
         std::cout << sp << (*it)->get_name() << std::endl;
         it++;
     }
@@ -759,6 +764,8 @@ void Client::XX(std::vector<std::string> input, std::vector<Client*> clients)
                 break;
             it++;
         }
+        if (it == clients.end())
+            return;
         std::string sp = "      ";
         std::cout << std::endl;
         std::cout << sp << (*it)->get_nickname() << " / " << (*it)->get_username() << std::endl;
@@ -792,9 +799,3 @@ void Client::XXX(std::vector<std::string> input, std::vector<Channel*>channels)
         it++;
     }
 }
-
-// valgrind ./irc <port> <pass>
-
-// sur un autre terminal
-// nc localhost <port>
-// pass nick/user etc dermerde toi tes un grand garcon ptit zizi
